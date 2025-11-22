@@ -13,7 +13,7 @@ function nav_active(string $path, string $current): string {
 <head>
     <meta charset="UTF-8">
     <title>حسابداری وردی</title>
-    <link rel="stylesheet" href="/assets/css/app.css?v=9">
+    <link rel="stylesheet" href="/assets/css/app.css?v=10">
 </head>
 <body>
 <?php if ($isAuthPage): ?>
@@ -39,8 +39,11 @@ function nav_active(string $path, string $current): string {
                 <span>داشبورد حسابداری وردی</span>
                 <span class="badge">Pro</span>
             </div>
-            <div class="nav-section">
-                <div class="nav-section-title">نمای کلی و تحلیل</div>
+            <div class="nav-section" data-section-key="overview">
+                <button class="nav-section-toggle" type="button">
+                    <span class="nav-section-title">نمای کلی و تحلیل</span>
+                    <span class="nav-toggle-icon">▾</span>
+                </button>
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a href="/" class="nav-link <?php echo nav_active('/', $currentPath); ?>">
@@ -54,8 +57,11 @@ function nav_active(string $path, string $current): string {
                     </li>
                 </ul>
             </div>
-            <div class="nav-section">
-                <div class="nav-section-title">مشتری و فروش</div>
+            <div class="nav-section" data-section-key="sales">
+                <button class="nav-section-toggle" type="button">
+                    <span class="nav-section-title">مشتری و فروش</span>
+                    <span class="nav-toggle-icon">▾</span>
+                </button>
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a href="/customers" class="nav-link <?php echo nav_active('/customers', $currentPath); ?>">
@@ -84,8 +90,11 @@ function nav_active(string $path, string $current): string {
                     </li>
                 </ul>
             </div>
-            <div class="nav-section">
-                <div class="nav-section-title">مالی و هزینه</div>
+            <div class="nav-section" data-section-key="finance">
+                <button class="nav-section-toggle" type="button">
+                    <span class="nav-section-title">مالی و هزینه</span>
+                    <span class="nav-toggle-icon">▾</span>
+                </button>
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a href="/expenses" class="nav-link <?php echo nav_active('/expenses', $currentPath); ?>">
@@ -106,11 +115,19 @@ function nav_active(string $path, string $current): string {
                         <a href="/payroll" class="nav-link <?php echo nav_active('/payroll', $currentPath); ?>">
                             <span class="icon">🧾</span><span class="text">حقوق و پورسانت</span>
                         </a>
+                        <ul class="nav-sublist">
+                            <li>
+                                <a href="/employees/create" class="nav-sub-link <?php echo nav_active('/employees/create', $currentPath); ?>">➕ افزودن پرسنل</a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>
-            <div class="nav-section">
-                <div class="nav-section-title">زیرساخت و تنظیمات</div>
+            <div class="nav-section" data-section-key="settings">
+                <button class="nav-section-toggle" type="button">
+                    <span class="nav-section-title">زیرساخت و تنظیمات</span>
+                    <span class="nav-toggle-icon">▾</span>
+                </button>
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a href="/servers" class="nav-link <?php echo nav_active('/servers', $currentPath); ?>">
@@ -245,6 +262,37 @@ function nav_active(string $path, string $current): string {
     } else {
         document.addEventListener('DOMContentLoaded', initPicker);
     }
+})();
+
+// ناوبری آکاردئونی با ذخیره وضعیت در localStorage
+(function(){
+    const sections = Array.from(document.querySelectorAll('.nav-section'));
+    let savedState = {};
+    try {
+        savedState = JSON.parse(localStorage.getItem('vardi_nav_sections') || '{}') || {};
+    } catch (e) {
+        savedState = {};
+    }
+
+    function setOpen(section, open, key) {
+        section.classList.toggle('collapsed', !open);
+        savedState[key] = open;
+        localStorage.setItem('vardi_nav_sections', JSON.stringify(savedState));
+    }
+
+    sections.forEach(function(section, index){
+        const key = section.getAttribute('data-section-key') || ('section-' + index);
+        const toggle = section.querySelector('.nav-section-toggle');
+        const isOpen = savedState[key] !== false;
+        setOpen(section, isOpen, key);
+
+        if (toggle) {
+            toggle.addEventListener('click', function(){
+                const nowOpen = section.classList.contains('collapsed');
+                setOpen(section, nowOpen, key);
+            });
+        }
+    });
 })();
 </script>
 </body>
