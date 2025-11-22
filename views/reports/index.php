@@ -8,6 +8,8 @@
 /** @var array $analysis */
 /** @var array $expensesByCategory */
 /** @var array $financialYears */
+/** @var array $contractsByCategory */
+/** @var array $paymentsByCategory */
 
 use App\Core\Date;
 ?>
@@ -161,6 +163,63 @@ use App\Core\Date;
         <?php foreach ($analysis as $line): ?>
             <div><?php echo htmlspecialchars($line, ENT_QUOTES, 'UTF-8'); ?></div>
         <?php endforeach; ?>
+    </div>
+</div>
+
+<div class="grid grid-2" style="margin-top:10px;">
+    <div class="card-soft">
+        <div class="card-header">
+            <div class="card-title">درآمد قراردادها به تفکیک دسته</div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>دسته</th>
+                    <th>مبلغ (تومان)</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if (empty($contractsByCategory)): ?>
+                    <tr><td colspan="2">در این بازه قراردادی ثبت نشده است.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($contractsByCategory as $row): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($row['category_name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo number_format((int)$row['total']); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-soft">
+        <div class="card-header">
+            <div class="card-title">دریافتی‌ها به تفکیک دسته</div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>دسته</th>
+                    <th>مبلغ (تومان)</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if (empty($paymentsByCategory)): ?>
+                    <tr><td colspan="2">در این بازه پرداخت موفقی ثبت نشده است.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($paymentsByCategory as $row): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($row['category_name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo number_format((int)$row['total']); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
