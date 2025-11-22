@@ -54,6 +54,8 @@ class ReportsController
         $monthlySeries = [];
         $payrollDetail = [];
         $expensesByCategory = [];
+        $contractsByCategory = [];
+        $paymentsByCategory = [];
 
         try {
             [$startTs, $endTs, $startJy, $startJm, $endJy, $endJm, $rangeMonths, $periodLabel, $year, $month] =
@@ -73,6 +75,8 @@ class ReportsController
             $summary['expenses_total']  = $this->sumExpenses($pdo, $startDate, $endDate);
             $expensesByCategory         = $this->expensesByCategory($pdo, $startDate, $endDate);
             $summary['external_total']  = $this->externalRevenue($startDt, $endDt);
+            $contractsByCategory        = $this->contractsByCategory($pdo, $startDate, $endDate);
+            $paymentsByCategory         = $this->paymentsByCategory($pdo, $startDt, $endDt);
 
             $summary['profit_contract_based'] = $summary['contracts_total'] - $summary['payroll_total'] - $summary['expenses_total'];
             $summary['profit_cash_based']     = $summary['payments_total']  - $summary['payroll_total'] - $summary['expenses_total'];
@@ -169,6 +173,8 @@ class ReportsController
             'payrollDetail'     => $payrollDetail,
             'analysis'          => $analysis,
             'expensesByCategory'=> $expensesByCategory,
+            'contractsByCategory'=> $contractsByCategory,
+            'paymentsByCategory'=> $paymentsByCategory,
         ]);
     }
 
@@ -208,6 +214,33 @@ class ReportsController
                                GROUP BY category
                                ORDER BY total DESC");
         $stmt->execute([':s'=>$startDate, ':e'=>$endDate]);
+        return $stmt->fetchAll();
+    }
+
+    private function contractsByCategory(PDO $pdo, string $startDate, string $endDate): array
+    {
+        $sql = "SELECT c.category_id, COALESCE(pc.name, 'نامشخص') AS category_name, SUM(c.total_amount) AS total
+                FROM contracts c
+                LEFT JOIN product_categories pc ON pc.id = c.category_id
+                WHERE c.start_date IS NOT NULL AND c.start_date >= :s AND c.start_date <= :e
+                GROUP BY c.category_id, pc.name
+                ORDER BY total DESC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':s'=>$startDate, ':e'=>$endDate]);
+        return $stmt->fetchAll();
+    }
+
+    private function paymentsByCategory(PDO $pdo, string $startDt, string $endDt): array
+    {
+        $sql = "SELECT c.category_id, COALESCE(pc.name, 'نامشخص') AS category_name, SUM(p.amount) AS total
+                FROM payments p
+                LEFT JOIN contracts c ON c.id = p.contract_id
+                LEFT JOIN product_categories pc ON pc.id = c.category_id
+                WHERE p.status = 'paid' AND p.paid_at >= :s AND p.paid_at <= :e
+                GROUP BY c.category_id, pc.name
+                ORDER BY total DESC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':s'=>$startDt, ':e'=>$endDt]);
         return $stmt->fetchAll();
     }
 
