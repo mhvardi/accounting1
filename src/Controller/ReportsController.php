@@ -41,6 +41,7 @@ class ReportsController
 
         $summary = [
             'contracts_total'        => 0,
+            'contracts_cost_total'   => 0,
             'payments_total'         => 0,
             'external_total'         => 0,
             'payroll_total'          => 0,
@@ -67,14 +68,16 @@ class ReportsController
             $endYm     = $endJy * 100 + $endJm;
 
             // مقادیر اصلی بازه فعلی
-            $summary['contracts_total'] = $this->sumContracts($pdo, $startDate, $endDate);
+            $currentContracts = $this->sumContracts($pdo, $startDate, $endDate);
+            $summary['contracts_total'] = $currentContracts['sale'];
+            $summary['contracts_cost_total'] = $currentContracts['cost'];
             $summary['payments_total']  = $this->sumPayments($pdo, $startDt, $endDt);
             $summary['payroll_total']   = $this->sumPayroll($pdo, $startYm, $endYm);
             $summary['expenses_total']  = $this->sumExpenses($pdo, $startDate, $endDate);
             $expensesByCategory         = $this->expensesByCategory($pdo, $startDate, $endDate);
             $summary['external_total']  = $this->externalRevenue($startDt, $endDt);
 
-            $summary['profit_contract_based'] = $summary['contracts_total'] - $summary['payroll_total'] - $summary['expenses_total'];
+            $summary['profit_contract_based'] = ($summary['contracts_total'] - $summary['contracts_cost_total']) - $summary['payroll_total'] - $summary['expenses_total'];
             $summary['profit_cash_based']     = $summary['payments_total']  - $summary['payroll_total'] - $summary['expenses_total'];
             $summary['profit_with_external']  = ($summary['payments_total'] + $summary['external_total']) - $summary['payroll_total'] - $summary['expenses_total'];
 
@@ -87,12 +90,14 @@ class ReportsController
             $pStartYm   = $pStartJy * 100 + $pStartJm;
             $pEndYm     = $pEndJy * 100 + $pEndJm;
 
-            $prevSummary['contracts_total'] = $this->sumContracts($pdo, $pStartDate, $pEndDate);
+            $prevContracts = $this->sumContracts($pdo, $pStartDate, $pEndDate);
+            $prevSummary['contracts_total'] = $prevContracts['sale'];
+            $prevSummary['contracts_cost_total'] = $prevContracts['cost'];
             $prevSummary['payments_total']  = $this->sumPayments($pdo, $pStartDt, $pEndDt);
             $prevSummary['payroll_total']   = $this->sumPayroll($pdo, $pStartYm, $pEndYm);
             $prevSummary['expenses_total']  = $this->sumExpenses($pdo, $pStartDate, $pEndDate);
             $prevSummary['external_total']  = $this->externalRevenue($pStartDt, $pEndDt);
-            $prevSummary['profit_contract_based'] = $prevSummary['contracts_total'] - $prevSummary['payroll_total'] - $prevSummary['expenses_total'];
+            $prevSummary['profit_contract_based'] = ($prevSummary['contracts_total'] - ($prevSummary['contracts_cost_total'] ?? 0)) - $prevSummary['payroll_total'] - $prevSummary['expenses_total'];
             $prevSummary['profit_cash_based']     = $prevSummary['payments_total']  - $prevSummary['payroll_total'] - $prevSummary['expenses_total'];
             $prevSummary['profit_with_external']  = ($prevSummary['payments_total'] + $prevSummary['external_total']) - $prevSummary['payroll_total'] - $prevSummary['expenses_total'];
 
@@ -172,11 +177,15 @@ class ReportsController
         ]);
     }
 
-    private function sumContracts(PDO $pdo, string $startDate, string $endDate): int
+    private function sumContracts(PDO $pdo, string $startDate, string $endDate): array
     {
-        $stmt = $pdo->prepare("SELECT SUM(total_amount) AS s FROM contracts WHERE start_date IS NOT NULL AND start_date >= :s AND start_date <= :e");
+        $stmt = $pdo->prepare("SELECT SUM(total_amount) AS sale, SUM(total_cost_amount) AS cost FROM contracts WHERE start_date IS NOT NULL AND start_date >= :s AND start_date <= :e");
         $stmt->execute([':s'=>$startDate, ':e'=>$endDate]);
-        return (int)($stmt->fetchColumn() ?: 0);
+        $row = $stmt->fetch();
+        return [
+            'sale' => (int)($row['sale'] ?? 0),
+            'cost' => (int)($row['cost'] ?? 0),
+        ];
     }
 
     private function sumPayments(PDO $pdo, string $startDt, string $endDt): int

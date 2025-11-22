@@ -24,7 +24,7 @@ class ServicesController
         try {
             $pdo = Database::connection();
             $this->ensureCatalog($pdo);
-            $services = $pdo->query("SELECT s.*, c.name AS customer_name, p.name AS product_name, p.type AS product_type, pc.name AS category_name, pc.slug AS category_slug FROM service_instances s LEFT JOIN customers c ON c.id = s.customer_id LEFT JOIN products p ON p.id = s.product_id LEFT JOIN product_categories pc ON pc.id = s.category_id ORDER BY s.id DESC")->fetchAll();
+            $services = $pdo->query("SELECT s.*, c.name AS customer_name, p.name AS product_name, p.type AS product_type, p.billing_cycle AS product_billing_cycle, pc.name AS category_name, pc.slug AS category_slug FROM service_instances s LEFT JOIN customers c ON c.id = s.customer_id LEFT JOIN products p ON p.id = s.product_id LEFT JOIN product_categories pc ON pc.id = s.category_id ORDER BY s.id DESC")->fetchAll();
             $customers = $pdo->query("SELECT id, name FROM customers ORDER BY id DESC")->fetchAll();
             $products  = $pdo->query("SELECT id, name, type, billing_cycle FROM products ORDER BY type, name")->fetchAll();
             $categories = $pdo->query("SELECT id, name, slug FROM product_categories ORDER BY is_primary DESC, id DESC")->fetchAll();
@@ -57,6 +57,10 @@ class ServicesController
         $start      = Date::fromJalaliInput($_POST['start_date'] ?? '');
         $nextDue    = Date::fromJalaliInput($_POST['next_due_date'] ?? '');
         $meta = $this->buildMeta($_POST);
+        $saleAmount = (int)Str::normalizeDigits($_POST['sale_amount'] ?? '0');
+        $costAmount = (int)Str::normalizeDigits($_POST['cost_amount'] ?? '0');
+        $billingCycle = trim($_POST['billing_cycle'] ?? ($_POST['selected_billing_cycle'] ?? ''));
+        $contractId = (int)Str::normalizeDigits($_POST['contract_id'] ?? '0');
 
         if (!$customerId || (!$productId && !$categoryId)) {
             header('Location: /services');
@@ -66,8 +70,8 @@ class ServicesController
         try {
             $pdo = Database::connection();
             $now = date('Y-m-d H:i:s');
-            $stmt = $pdo->prepare("INSERT INTO service_instances (customer_id, product_id, category_id, status, start_date, next_due_date, access_granted, meta_json, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)");
-            $stmt->execute([$customerId, $productId ?: null, $categoryId ?: null, $status, $start, $nextDue, $access, json_encode($meta, JSON_UNESCAPED_UNICODE), $now, $now]);
+            $stmt = $pdo->prepare("INSERT INTO service_instances (customer_id, product_id, category_id, contract_id, status, start_date, next_due_date, access_granted, billing_cycle, sale_amount, cost_amount, meta_json, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt->execute([$customerId, $productId ?: null, $categoryId ?: null, $contractId ?: null, $status, $start, $nextDue, $access, $billingCycle ?: null, $saleAmount, $costAmount, json_encode($meta, JSON_UNESCAPED_UNICODE), $now, $now]);
         } catch (PDOException $e) {
             View::renderError('خطا در ثبت سرویس: ' . $e->getMessage(), $e->getTraceAsString(), Auth::user());
             return;
@@ -86,6 +90,10 @@ class ServicesController
         $nextDue    = Date::fromJalaliInput($_POST['next_due_date'] ?? '');
         $meta = $this->buildMeta($_POST);
         $categoryId = (int)Str::normalizeDigits($_POST['category_id'] ?? '0');
+        $saleAmount = (int)Str::normalizeDigits($_POST['sale_amount'] ?? '0');
+        $costAmount = (int)Str::normalizeDigits($_POST['cost_amount'] ?? '0');
+        $billingCycle = trim($_POST['billing_cycle'] ?? ($_POST['selected_billing_cycle'] ?? ''));
+        $contractId = (int)Str::normalizeDigits($_POST['contract_id'] ?? '0');
 
         if (!$id) {
             header('Location: /services');
@@ -95,8 +103,8 @@ class ServicesController
         try {
             $pdo = Database::connection();
             $now = date('Y-m-d H:i:s');
-            $stmt = $pdo->prepare("UPDATE service_instances SET status=?, start_date=?, next_due_date=?, access_granted=?, meta_json=?, category_id=?, updated_at=? WHERE id=?");
-            $stmt->execute([$status, $start, $nextDue, $access, json_encode($meta, JSON_UNESCAPED_UNICODE), $categoryId ?: null, $now, $id]);
+            $stmt = $pdo->prepare("UPDATE service_instances SET status=?, start_date=?, next_due_date=?, access_granted=?, meta_json=?, category_id=?, billing_cycle=?, sale_amount=?, cost_amount=?, contract_id=?, updated_at=? WHERE id=?");
+            $stmt->execute([$status, $start, $nextDue, $access, json_encode($meta, JSON_UNESCAPED_UNICODE), $categoryId ?: null, $billingCycle ?: null, $saleAmount, $costAmount, $contractId ?: null, $now, $id]);
         } catch (PDOException $e) {
             View::renderError('خطا در بروزرسانی سرویس: ' . $e->getMessage(), $e->getTraceAsString(), Auth::user());
             return;
