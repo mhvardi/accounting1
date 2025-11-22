@@ -66,10 +66,15 @@ use App\Core\Date;
                         $modeLabel = 'درصد ثابت';
                     }
 
+                    $config = json_decode($e['commission_config_json'] ?? '', true) ?: [];
+
                     // 🔑 مبنای نمایش "حجم فروش مبنا"
                     if ($scope === 'category') {
                         // ✅ وقتی پورسانت روی دسته‌های خاص است
                         $basisLabel = 'دسته‌های خاص خدمات';
+                        if (!empty($config['category_company_wide'])) {
+                            $basisLabel .= ' (شرکتی)';
+                        }
                     } elseif ($scope === 'company') {
                         $basisLabel = 'حجم کل فروش شرکت';
                     } else {
@@ -80,7 +85,6 @@ use App\Core\Date;
                     $percent    = (float)($e['commission_percent'] ?? 0);
 
                     $percentLabel = '';
-                    $config = json_decode($e['commission_config_json'] ?? '', true) ?: [];
                     $tiers  = $config['tiers'] ?? [];
                     if ($mode === 'none' || ($e['compensation_type'] ?? 'fixed') === 'fixed') {
                         $percentLabel = 'بدون پورسانت';

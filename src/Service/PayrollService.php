@@ -35,6 +35,7 @@ class PayrollService
         $config = json_decode($employee['commission_config_json'] ?? '', true) ?: [];
         $tiers  = $config['tiers'] ?? [];
         $categories = $config['categories'] ?? [];
+        $categoryCompanyWide = !empty($config['category_company_wide']);
 
         $scope = $employee['commission_scope'] ?? 'self';
         $contracts = [];
@@ -58,10 +59,14 @@ class PayrollService
                     continue;
                 }
                 if ($scope === 'category') {
-                    if ((int)($row['sales_employee_id'] ?? 0) !== $employeeId) {
+                    $rowCategoryId = (int)($row['category_id'] ?? 0);
+                    $salesPersonId = (int)($row['sales_employee_id'] ?? 0);
+
+                    if (!empty($categories) && !in_array($rowCategoryId, $categories, true)) {
                         continue;
                     }
-                    if (!empty($categories) && !in_array((int)($row['category_id'] ?? 0), $categories, true)) {
+
+                    if (!$categoryCompanyWide && $salesPersonId !== 0 && $salesPersonId !== $employeeId) {
                         continue;
                     }
                 }
@@ -83,10 +88,14 @@ class PayrollService
                     continue;
                 }
                 if ($scope === 'category') {
-                    if ((int)($row['sales_employee_id'] ?? 0) !== $employeeId) {
+                    $rowCategoryId = (int)($row['category_id'] ?? 0);
+                    $salesPersonId = (int)($row['sales_employee_id'] ?? 0);
+
+                    if (!empty($categories) && !in_array($rowCategoryId, $categories, true)) {
                         continue;
                     }
-                    if (!empty($categories) && !in_array((int)($row['category_id'] ?? 0), $categories, true)) {
+
+                    if (!$categoryCompanyWide && $salesPersonId !== 0 && $salesPersonId !== $employeeId) {
                         continue;
                     }
                 }

@@ -6,6 +6,7 @@
  * @var int $month
  * @var string $basis
  * @var array $contracts
+ * @var array $payments
  * @var int $salesAmount
  * @var int $commission
  * @var float $percent
@@ -70,6 +71,7 @@ use App\Core\Date;
 <?php if ($selectedEmployee): ?>
     <?php
     $percentDisplay = $percent > 0 ? ($percent . '٪') : 'بدون پورسانت';
+    $basisLabel = $basis === 'cash_collected' ? 'بر اساس دریافتی‌ها' : 'بر اساس مبلغ قراردادها';
     ?>
     <div class="card-soft">
         <div class="card-header">
@@ -81,7 +83,7 @@ use App\Core\Date;
         </div>
         <div class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px;">
             <div>
-                <div class="form-label">حجم فروش مبنا</div>
+                <div class="form-label">حجم فروش مبنا (<?php echo $basisLabel; ?>)</div>
                 <div class="kpi-value"><?php echo number_format($salesAmount); ?></div>
             </div>
             <div>
@@ -97,6 +99,72 @@ use App\Core\Date;
                 <div class="kpi-value"><?php echo number_format((int)$selectedEmployee['base_salary']); ?></div>
             </div>
         </div>
+
+        <?php if ($basis === 'cash_collected'): ?>
+            <div style="margin-top:12px;">
+                <div class="form-label">جزئیات دریافتی‌های مشمول پورسانت</div>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>شناسه پرداخت</th>
+                        <th>قرارداد</th>
+                        <th>دسته‌بندی</th>
+                        <th>تاریخ پرداخت</th>
+                        <th>مبلغ دریافتی</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (!empty($payments)): ?>
+                        <?php foreach ($payments as $p): ?>
+                            <tr>
+                                <td><?php echo (int)($p['id'] ?? 0); ?></td>
+                                <td><?php echo htmlspecialchars($p['contract_title'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo (int)($p['category_id'] ?? 0); ?></td>
+                                <td><?php echo htmlspecialchars($p['pay_date'] ?? $p['paid_at'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo number_format((int)($p['amount'] ?? 0)); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" style="text-align:center;color:#6b7280;">موردی برای این دوره یافت نشد.</td>
+                        </tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div style="margin-top:12px;">
+                <div class="form-label">جزئیات قراردادهای مشمول پورسانت</div>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>شناسه قرارداد</th>
+                        <th>عنوان</th>
+                        <th>دسته‌بندی</th>
+                        <th>تاریخ شروع</th>
+                        <th>مبلغ کل</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (!empty($contracts)): ?>
+                        <?php foreach ($contracts as $c): ?>
+                            <tr>
+                                <td><?php echo (int)($c['id'] ?? 0); ?></td>
+                                <td><?php echo htmlspecialchars($c['title'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo (int)($c['category_id'] ?? 0); ?></td>
+                                <td><?php echo htmlspecialchars($c['start_date'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo number_format((int)($c['total_amount'] ?? 0)); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" style="text-align:center;color:#6b7280;">موردی برای این دوره یافت نشد.</td>
+                        </tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
 
         <form method="post" action="/payroll/create">
             <input type="hidden" name="employee_id" value="<?php echo (int)$selectedEmployee['id']; ?>">

@@ -122,8 +122,9 @@ class EmployeeController
                 $config = [
                     'tiers' => $tiers,
                 ];
-                if ($commissionBasis === 'categories' && !empty($commissionCats)) {
+                if ($commissionBasis === 'categories') {
                     $config['categories'] = $commissionCats;
+                    $config['category_company_wide'] = isset($_POST['category_company_wide']) ? 1 : 0;
                 }
                 $configJson = json_encode($config, JSON_UNESCAPED_UNICODE);
 
@@ -195,6 +196,7 @@ class EmployeeController
         }
         $tiers          = $configArr['tiers']      ?? [];
         $commissionCats = $configArr['categories'] ?? [];
+        $categoryCompanyWide = !empty($configArr['category_company_wide']);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
@@ -227,6 +229,7 @@ class EmployeeController
 
                 $commissionCats = $_POST['commission_categories'] ?? [];
                 $commissionCats = array_map('intval', $commissionCats);
+                $categoryCompanyWide = isset($_POST['category_company_wide']) ? 1 : 0;
 
                 $baseSalary        = (int)str_replace(',', '', Str::normalizeDigits($baseSalaryInput));
                 $commissionPercent = (float)Str::normalizeDigits($commissionPercentInp);
@@ -260,8 +263,9 @@ class EmployeeController
                 $config = [
                     'tiers' => $tiers,
                 ];
-                if ($commissionBasis === 'categories' && !empty($commissionCats)) {
+                if ($commissionBasis === 'categories') {
                     $config['categories'] = $commissionCats;
+                    $config['category_company_wide'] = $categoryCompanyWide;
                 }
                 $configJson = json_encode($config, JSON_UNESCAPED_UNICODE);
 
@@ -304,6 +308,7 @@ class EmployeeController
             'categories'      => $categories,
             'commissionSteps' => $tiers,
             'commissionCats'  => $commissionCats,
+            'categoryCompanyWide' => $categoryCompanyWide,
         ]);
     }
 
