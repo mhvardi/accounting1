@@ -86,6 +86,7 @@ use App\Core\Date;
             <?php echo number_format($summary['contracts_total']); ?>
             <span style="font-size:11px;">تومان</span>
         </div>
+        <div style="font-size:11px;color:#6b7280;margin-top:4px;">هزینه خرید ثبت‌شده: <?php echo number_format($summary['contracts_cost_total']); ?> تومان</div>
     </div>
     <div class="card">
         <div class="card-header"><div class="card-title">دریافتی واقعی (بازه انتخابی)</div></div>

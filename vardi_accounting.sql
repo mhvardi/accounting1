@@ -34,6 +34,7 @@ CREATE TABLE `contracts` (
   `category_id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
   `total_amount` int(11) NOT NULL,
+  `total_cost_amount` int(11) NOT NULL DEFAULT 0,
   `start_date` date NOT NULL,
   `end_date` date DEFAULT NULL,
   `status` enum('active','completed','cancelled') DEFAULT 'active',
@@ -402,11 +403,37 @@ CREATE TABLE `service_instances` (
   `customer_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `category_id` int(11) DEFAULT NULL,
+  `contract_id` int(11) DEFAULT NULL,
   `status` enum('active','pending','suspended','cancelled') DEFAULT 'active',
   `start_date` date DEFAULT NULL,
   `next_due_date` date DEFAULT NULL,
   `access_granted` tinyint(1) DEFAULT 0,
+  `billing_cycle` varchar(50) DEFAULT NULL,
+  `sale_amount` int(11) NOT NULL DEFAULT 0,
+  `cost_amount` int(11) NOT NULL DEFAULT 0,
   `meta_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`meta_json`)),
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `contract_line_items`
+--
+
+CREATE TABLE `contract_line_items` (
+  `id` int(11) NOT NULL,
+  `contract_id` int(11) NOT NULL,
+  `service_instance_id` int(11) DEFAULT NULL,
+  `product_id` int(11) DEFAULT NULL,
+  `category_id` int(11) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `billing_cycle` varchar(50) DEFAULT NULL,
+  `sale_amount` int(11) NOT NULL DEFAULT 0,
+  `cost_amount` int(11) NOT NULL DEFAULT 0,
+  `start_date` date DEFAULT NULL,
+  `next_due_date` date DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -545,7 +572,16 @@ ALTER TABLE `service_instances`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_customer_id` (`customer_id`),
   ADD KEY `idx_product_id` (`product_id`),
-  ADD KEY `idx_category_id` (`category_id`);
+  ADD KEY `idx_category_id` (`category_id`),
+  ADD KEY `idx_contract_id` (`contract_id`);
+
+--
+-- Indexes for table `contract_line_items`
+--
+ALTER TABLE `contract_line_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_contract` (`contract_id`),
+  ADD KEY `idx_service_instance` (`service_instance_id`);
 
 --
 -- Indexes for table `users`
@@ -648,6 +684,12 @@ ALTER TABLE `servers`
 -- AUTO_INCREMENT for table `service_instances`
 --
 ALTER TABLE `service_instances`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `contract_line_items`
+--
+ALTER TABLE `contract_line_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
