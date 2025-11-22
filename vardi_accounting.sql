@@ -287,6 +287,8 @@ CREATE TABLE `monthly_targets` (
 CREATE TABLE `payments` (
   `id` int(11) NOT NULL,
   `contract_id` int(11) DEFAULT NULL,
+  `customer_id` int(11) DEFAULT NULL,
+  `contract_amount` int(11) DEFAULT NULL,
   `whmcs_invoice_id` int(11) DEFAULT NULL,
   `external_source` enum('none','whmcs','bankshomareh','starplan','manual') DEFAULT 'none',
   `external_ref` varchar(190) DEFAULT NULL,
@@ -304,10 +306,10 @@ CREATE TABLE `payments` (
 -- Dumping data for table `payments`
 --
 
-INSERT INTO `payments` (`id`, `contract_id`, `whmcs_invoice_id`, `external_source`, `external_ref`, `amount`, `pay_date`, `paid_at`, `method`, `status`, `note`, `created_at`, `updated_at`) VALUES
-(1, 2, NULL, 'none', NULL, 20000000, '1404/08/28', '0000-00-00 00:00:00', 'درگاه', 'paid', '', '2025-11-19 15:04:56', '2025-11-19 15:04:56'),
-(2, 4, NULL, 'none', NULL, 20000000, '1404/08/20', '0000-00-00 00:00:00', 'درگاه', 'paid', '', '2025-11-19 15:07:28', '2025-11-19 15:07:28'),
-(3, 10, NULL, 'manual', NULL, 5000000, '2025-11-22', '2025-11-22 00:00:00', 'کارت به کارت', 'paid', '', '2025-11-22 10:05:11', '2025-11-22 10:05:11');
+INSERT INTO `payments` (`id`, `contract_id`, `customer_id`, `contract_amount`, `whmcs_invoice_id`, `external_source`, `external_ref`, `amount`, `pay_date`, `paid_at`, `method`, `status`, `note`, `created_at`, `updated_at`) VALUES
+(1, 2, 4, 40000000, NULL, 'none', NULL, 20000000, '1404/08/28', '0000-00-00 00:00:00', 'درگاه', 'paid', '', '2025-11-19 15:04:56', '2025-11-19 15:04:56'),
+(2, 4, 5, 60000000, NULL, 'none', NULL, 20000000, '1404/08/20', '0000-00-00 00:00:00', 'درگاه', 'paid', '', '2025-11-19 15:07:28', '2025-11-19 15:07:28'),
+(3, 10, 23, 5000000, NULL, 'manual', NULL, 5000000, '2025-11-22', '2025-11-22 00:00:00', 'کارت به کارت', 'paid', '', '2025-11-22 10:05:11', '2025-11-22 10:05:11');
 
 -- --------------------------------------------------------
 

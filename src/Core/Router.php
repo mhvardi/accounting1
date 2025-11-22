@@ -103,6 +103,9 @@ class Router
             case '/payments/delete':
                 (new \App\Controller\PaymentsController())->delete();
                 break;
+            case '/payments/contract-info':
+                (new \App\Controller\PaymentsController())->contractInfo();
+                break;
 
             case '/expenses':
                 (new \App\Controller\ExpensesController())->index();

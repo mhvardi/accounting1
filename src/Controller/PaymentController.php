@@ -24,10 +24,14 @@ class PaymentController
                 LEFT JOIN contracts c ON c.id = p.contract_id
                 ORDER BY p.paid_at DESC";
         $rows = $pdo->query($sql)->fetchAll();
+        $contracts = $pdo->query("SELECT id, title, total_amount, customer_id FROM contracts ORDER BY id DESC")->fetchAll();
+        $customers = $pdo->query("SELECT id, name FROM customers ORDER BY id DESC")->fetchAll();
 
         View::render('payments/index', [
             'user'     => Auth::user(),
             'payments' => $rows,
+            'contracts'=> $contracts,
+            'customers'=> $customers,
         ]);
     }
 

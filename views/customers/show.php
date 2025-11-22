@@ -99,18 +99,22 @@
             <thead>
             <tr>
                 <th>#</th>
+                <th>قرارداد</th>
                 <th>مبلغ</th>
+                <th>تاریخ</th>
                 <th>وضعیت</th>
             </tr>
             </thead>
             <tbody>
             <?php if (empty($payments)): ?>
-                <tr><td colspan="3">پرداختی ثبت نشده است.</td></tr>
+                <tr><td colspan="4">پرداختی ثبت نشده است.</td></tr>
             <?php else: ?>
                 <?php foreach ($payments as $p): ?>
                     <tr>
                         <td><?php echo (int)$p['id']; ?></td>
+                        <td><?php echo htmlspecialchars($p['contract_title'] ?? 'بدون قرارداد', ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo number_format((int)$p['amount']); ?></td>
+                        <td><?php echo $p['pay_date'] ? $p['pay_date'] : ($p['paid_at'] ?? ''); ?></td>
                         <td><?php echo htmlspecialchars($p['status'], ENT_QUOTES, 'UTF-8'); ?></td>
                     </tr>
                 <?php endforeach; ?>

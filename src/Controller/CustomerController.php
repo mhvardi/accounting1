@@ -135,20 +135,20 @@ class CustomerController
 
             $stmtPaid = $pdo->prepare("SELECT COALESCE(SUM(p.amount),0)
                                         FROM payments p
-                                        JOIN contracts c ON c.id = p.contract_id
-                                        WHERE p.status = 'paid' AND c.customer_id = ?");
-            $stmtPaid->execute([$id]);
+                                        LEFT JOIN contracts c ON c.id = p.contract_id
+                                        WHERE p.status = 'paid' AND (p.customer_id = ? OR c.customer_id = ?)");
+            $stmtPaid->execute([$id, $id]);
             $paidTotal = (int)$stmtPaid->fetchColumn();
 
             $dueTotal = $contractTotal - $paidTotal;
 
             $paymentsStmt = $pdo->prepare("SELECT p.*, c.title AS contract_title
                                            FROM payments p
-                                           JOIN contracts c ON c.id = p.contract_id
-                                           WHERE c.customer_id = ?
+                                           LEFT JOIN contracts c ON c.id = p.contract_id
+                                           WHERE p.customer_id = ? OR c.customer_id = ?
                                            ORDER BY p.id DESC
                                            LIMIT 20");
-            $paymentsStmt->execute([$id]);
+            $paymentsStmt->execute([$id, $id]);
             $payments = $paymentsStmt->fetchAll();
 
             $servicesStmt = $pdo->prepare("SELECT s.*, p.name AS product_name, p.type AS product_type
