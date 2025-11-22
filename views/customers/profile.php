@@ -130,9 +130,9 @@ use App\Core\Str;
                 <?php foreach ($payments as $p): ?>
                     <tr>
                         <td><?php echo (int)$p['id']; ?></td>
-                        <td><?php echo htmlspecialchars(Str::beautifyLabel($p['contract_title']), ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars(Str::beautifyLabel($p['contract_title'] ?: 'بدون قرارداد'), ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo number_format((int)$p['amount']); ?></td>
-                        <td><?php echo Date::jDate($p['paid_at'] ?: $p['pay_date']); ?></td>
+                        <td><?php echo $p['pay_date'] ? Date::jDate($p['pay_date']) : ($p['paid_at'] ? Date::jDate($p['paid_at']) : ''); ?></td>
                         <td><?php echo htmlspecialchars($p['status'], ENT_QUOTES, 'UTF-8'); ?></td>
                     </tr>
                 <?php endforeach; ?>
