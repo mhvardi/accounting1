@@ -1,0 +1,251 @@
+<?php
+use App\Core\Date;
+$currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$currentJDate = Date::j('Y/m/d');
+$isAuthPage = isset($viewName) && strpos($viewName, 'auth/') === 0;
+
+function nav_active(string $path, string $current): string {
+    return $path === $current ? 'active' : '';
+}
+?>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>حسابداری وردی</title>
+    <link rel="stylesheet" href="/assets/css/app.css?v=9">
+</head>
+<body>
+<?php if ($isAuthPage): ?>
+    <div class="auth-shell">
+        <div class="auth-hero">
+            <div class="logo">وردی کلود</div>
+            <div class="hero-title">حسابداری هوشمند و یکپارچه</div>
+            <div class="hero-sub">ورود امن، رابط مدرن و داشبورد آنی برای مدیریت مالی</div>
+            <div class="hero-points">
+                <span>گزارش زنده ماه جاری</span>
+                <span>پشتیبانی از سال/ماه شمسی</span>
+                <span>کنترل هزینه و حقوق</span>
+            </div>
+        </div>
+        <div class="auth-card">
+            <?php include $viewFile; ?>
+        </div>
+    </div>
+<?php else: ?>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <span>داشبورد حسابداری وردی</span>
+                <span class="badge">Pro</span>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">نمای کلی و تحلیل</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link <?php echo nav_active('/', $currentPath); ?>">
+                            <span class="icon">🏠</span><span class="text">پیشخوان</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/reports" class="nav-link <?php echo nav_active('/reports', $currentPath); ?>">
+                            <span class="icon">📈</span><span class="text">گزارش‌ها</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">مشتری و فروش</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/customers" class="nav-link <?php echo nav_active('/customers', $currentPath); ?>">
+                            <span class="icon">🧑‍💼</span><span class="text">مشتریان</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/contracts" class="nav-link <?php echo nav_active('/contracts', $currentPath); ?>">
+                            <span class="icon">📄</span><span class="text">قراردادها</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/payments" class="nav-link <?php echo nav_active('/payments', $currentPath); ?>">
+                            <span class="icon">💳</span><span class="text">پرداخت‌ها</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/services" class="nav-link <?php echo nav_active('/services', $currentPath); ?>">
+                            <span class="icon">🛰️</span><span class="text">سرویس‌ها</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/categories" class="nav-link <?php echo nav_active('/categories', $currentPath); ?>">
+                            <span class="icon">📂</span><span class="text">دسته‌بندی خدمات</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">مالی و هزینه</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/expenses" class="nav-link <?php echo nav_active('/expenses', $currentPath); ?>">
+                            <span class="icon">💸</span><span class="text">هزینه‌ها</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/expense-categories" class="nav-link <?php echo nav_active('/expense-categories', $currentPath); ?>">
+                            <span class="icon">🏷️</span><span class="text">دسته‌بندی هزینه</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/misc-sites" class="nav-link <?php echo nav_active('/misc-sites', $currentPath); ?>">
+                            <span class="icon">🌐</span><span class="text">سایت‌های متفرقه</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/payroll" class="nav-link <?php echo nav_active('/payroll', $currentPath); ?>">
+                            <span class="icon">🧾</span><span class="text">حقوق و پورسانت</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">زیرساخت و تنظیمات</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/servers" class="nav-link <?php echo nav_active('/servers', $currentPath); ?>">
+                            <span class="icon">🖥️</span><span class="text">سرورها</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div style="margin-top:auto;font-size:11px;color:#6b7280;">
+                <?php if (!empty($user)): ?>
+                    <div>کاربر: <?php echo htmlspecialchars($user['email'], ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div style="margin-top:4px;">
+                        <a href="/logout" style="color:#f97316;text-decoration:none;">خروج</a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </aside>
+        <main class="main">
+            <div class="topbar">
+                <div></div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div id="clockLabel" data-date="<?php echo htmlspecialchars($currentJDate, ENT_QUOTES, 'UTF-8'); ?>" style="font-size:12px;min-width:150px;text-align:left;"></div>
+                    <button type="button" class="btn btn-outline" id="themeToggle" title="تغییر تم">
+                        <span id="themeIcon">☀️</span>
+                    </button>
+                </div>
+            </div>
+            <?php include $viewFile; ?>
+        </main>
+    </div>
+<?php endif; ?>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.js"></script>
+
+<script>
+// تم روشن / تیره با آیکن خورشید / ماه
+(function() {
+    const saved = localStorage.getItem('vardi_theme');
+    if (saved === 'dark') document.body.classList.add('theme-dark');
+    const icon = document.getElementById('themeIcon');
+    const btn   = document.getElementById('themeToggle');
+    function sync() {
+        if (!icon) return;
+        icon.textContent = document.body.classList.contains('theme-dark') ? '🌙' : '☀️';
+    }
+    sync();
+    if (btn) {
+        btn.addEventListener('click', function(){
+            document.body.classList.toggle('theme-dark');
+            localStorage.setItem('vardi_theme', document.body.classList.contains('theme-dark') ? 'dark' : 'light');
+            sync();
+        });
+    }
+})();
+
+// ساعت زنده با تاریخ شمسی ثابت از سرور
+(function(){
+    const clock = document.getElementById('clockLabel');
+    if (!clock) return;
+    const baseDate = clock.getAttribute('data-date') || '';
+    function tick() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('fa-IR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        clock.textContent = baseDate + ' - ' + timeStr;
+    }
+    tick();
+    setInterval(tick, 1000);
+})();
+
+// نرمال کردن اعداد فارسی به انگلیسی و فرمت سه‌رقمی مبالغ
+(function(){
+    function normalizeDigits(str){
+        const fa = '۰۱۲۳۴۵۶۷۸۹';
+        const ar = '٠١٢٣٤٥٦٧٨٩';
+        let out = '';
+        for (let ch of String(str)) {
+            const iFa = fa.indexOf(ch);
+            const iAr = ar.indexOf(ch);
+            if (iFa !== -1) out += String(iFa);
+            else if (iAr !== -1) out += String(iAr);
+            else out += ch;
+        }
+        return out;
+    }
+    function formatMoney(val){
+        const digits = String(val).replace(/[^0-9]/g,'');
+        if (!digits) return '';
+        return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    document.addEventListener('input', function(e){
+        const el = e.target;
+        if (!el.closest('input,textarea')) return;
+        if (el.type === 'text' || el.type === 'number' || el.tagName === 'TEXTAREA') {
+            const pos = el.selectionStart;
+            let v = normalizeDigits(el.value);
+            if (el.classList.contains('money-input')) {
+                v = formatMoney(v);
+            }
+            el.value = v;
+            if (pos !== null) {
+                el.selectionStart = el.selectionEnd = el.value.length;
+            }
+        }
+    });
+})();
+
+// تoggler ساده برای فرم‌های ویرایش سطر (inline-edit)
+(function(){
+    document.addEventListener('click', function(e){
+        const btn = e.target.closest('[data-inline-edit-toggle]');
+        if (!btn) return;
+        e.preventDefault();
+        const id = btn.getAttribute('data-inline-edit-toggle');
+        if (!id) return;
+        const box = document.querySelector('[data-inline-edit-box="' + id + '"]');
+        if (!box) return;
+        const isShown = box.style.display === 'block';
+        box.style.display = isShown ? 'none' : 'block';
+    });
+})();
+
+// فعال‌سازی datepicker شمسی اگر کتابخانه لود شده باشد
+(function(){
+    function initPicker(){
+        if (window.jalaliDatepicker && typeof window.jalaliDatepicker.startWatch === 'function') {
+            window.jalaliDatepicker.startWatch({ selector: '.jalali-picker' });
+        }
+    }
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        initPicker();
+    } else {
+        document.addEventListener('DOMContentLoaded', initPicker);
+    }
+})();
+</script>
+</body>
+</html>
