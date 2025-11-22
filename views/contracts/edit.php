@@ -20,7 +20,7 @@ use App\Core\Str;
         <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
             <div class="form-field">
                 <label class="form-label">مشتری</label>
-                <select name="customer_id" class="form-select">
+                <select name="customer_id" class="form-select select-search">
                     <?php foreach ($customers as $cust): ?>
                         <option value="<?php echo (int)$cust['id']; ?>" <?php echo $contract['customer_id']==$cust['id']?'selected':''; ?>>
                             <?php echo htmlspecialchars(Str::beautifyLabel($cust['name']), ENT_QUOTES, 'UTF-8'); ?>
@@ -42,7 +42,7 @@ use App\Core\Str;
             </div>
             <div class="form-field">
                 <label class="form-label">دسته خدمات</label>
-                <select name="category_id" class="form-select">
+                <select name="category_id" class="form-select select-search">
                     <?php foreach ($categories as $cat): ?>
                         <option value="<?php echo (int)$cat['id']; ?>" <?php echo $contract['category_id']==$cat['id']?'selected':''; ?>>
                             <?php echo htmlspecialchars(Str::beautifyLabel($cat['name']), ENT_QUOTES, 'UTF-8'); ?>
@@ -52,7 +52,7 @@ use App\Core\Str;
             </div>
             <div class="form-field">
                 <label class="form-label">کارشناس فروش</label>
-                <select name="employee_id" class="form-select">
+                <select name="employee_id" class="form-select select-search">
                     <option value="">بدون کارشناس</option>
                     <?php foreach ($employees as $emp): ?>
                         <option value="<?php echo (int)$emp['id']; ?>" <?php echo $contract['sales_employee_id']==$emp['id']?'selected':''; ?>>

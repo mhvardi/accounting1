@@ -14,6 +14,7 @@ function nav_active(string $path, string $current): string {
     <meta charset="UTF-8">
     <title>حسابداری وردی</title>
     <link rel="stylesheet" href="/assets/css/app.css?v=9">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 </head>
 <body>
 <?php if ($isAuthPage): ?>
@@ -145,8 +146,24 @@ function nav_active(string $path, string $current): string {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
 <script>
+// در دسترس قراردادن تابع نرمال‌سازی اعداد برای سایر ماژول‌ها (جستجو و فرم‌ها)
+function normalizeDigits(str){
+    const fa = '۰۱۲۳۴۵۶۷۸۹';
+    const ar = '٠١٢٣٤٥٦٧٨٩';
+    let out = '';
+    for (let ch of String(str)) {
+        const iFa = fa.indexOf(ch);
+        const iAr = ar.indexOf(ch);
+        if (iFa !== -1) out += String(iFa);
+        else if (iAr !== -1) out += String(iAr);
+        else out += ch;
+    }
+    return out;
+}
+
 // تم روشن / تیره با آیکن خورشید / ماه
 (function() {
     const saved = localStorage.getItem('vardi_theme');
@@ -183,19 +200,6 @@ function nav_active(string $path, string $current): string {
 
 // نرمال کردن اعداد فارسی به انگلیسی و فرمت سه‌رقمی مبالغ
 (function(){
-    function normalizeDigits(str){
-        const fa = '۰۱۲۳۴۵۶۷۸۹';
-        const ar = '٠١٢٣٤٥٦٧٨٩';
-        let out = '';
-        for (let ch of String(str)) {
-            const iFa = fa.indexOf(ch);
-            const iAr = ar.indexOf(ch);
-            if (iFa !== -1) out += String(iFa);
-            else if (iAr !== -1) out += String(iAr);
-            else out += ch;
-        }
-        return out;
-    }
     function formatMoney(val){
         const digits = String(val).replace(/[^0-9]/g,'');
         if (!digits) return '';
@@ -245,6 +249,57 @@ function nav_active(string $path, string $current): string {
     } else {
         document.addEventListener('DOMContentLoaded', initPicker);
     }
+})();
+
+// فعال‌سازی جستجو روی selectهای شلوغ با Choices.js و هماهنگ با نرمال‌سازی اعداد
+(function(){
+    function initSelectSearch(){
+        if (typeof Choices === 'undefined') return;
+
+        document.querySelectorAll('select.select-search').forEach(function(el){
+            Array.from(el.options).forEach(function(opt){
+                const label = opt.textContent || '';
+                const normalized = normalizeDigits(label || opt.value || '');
+                if (normalized) {
+                    opt.setAttribute('data-custom-properties', normalized);
+                }
+            });
+
+            const instance = new Choices(el, {
+                searchEnabled: true,
+                shouldSort: false,
+                allowHTML: false,
+                searchFields: ['label','value','customProperties'],
+                searchPlaceholderValue: 'جستجو...',
+                fuseOptions: {
+                    keys: ['label','value','customProperties'],
+                    threshold: 0.3,
+                },
+            });
+
+            if (el.value) {
+                instance.setChoiceByValue(el.value);
+            }
+        });
+    }
+
+    function normalizeSearchInput(e){
+        const input = e.target.closest('.choices__input--cloned');
+        if (!input) return;
+        const pos = input.selectionStart;
+        input.value = normalizeDigits(input.value);
+        if (pos !== null) {
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        initSelectSearch();
+    } else {
+        document.addEventListener('DOMContentLoaded', initSelectSearch);
+    }
+
+    document.addEventListener('input', normalizeSearchInput);
 })();
 </script>
 </body>

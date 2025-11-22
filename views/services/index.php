@@ -48,7 +48,7 @@
     <form method="post" action="/services/store" class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;">
         <div class="form-field">
             <label class="form-label">مشتری</label>
-            <select name="customer_id" class="form-select" required>
+            <select name="customer_id" class="form-select select-search" required>
                 <option value="">انتخاب کنید</option>
                 <?php foreach ($customers as $c): ?>
                     <option value="<?php echo (int)$c['id']; ?>"><?php echo htmlspecialchars($c['name'], ENT_QUOTES, 'UTF-8'); ?></option>
@@ -57,7 +57,7 @@
         </div>
         <div class="form-field">
             <label class="form-label">دسته‌بندی خدمت</label>
-            <select name="category_id" class="form-select" id="service-category" required>
+            <select name="category_id" class="form-select select-search" id="service-category" required>
                 <option value="">انتخاب از دسته‌های خدمات</option>
                 <?php foreach ($categories as $cat): ?>
                     <option value="<?php echo (int)$cat['id']; ?>" data-type="<?php echo htmlspecialchars($cat['slug'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($cat['name'], ENT_QUOTES, 'UTF-8'); ?></option>
@@ -67,7 +67,7 @@
         </div>
         <div class="form-field">
             <label class="form-label">طرح/نوع دقیق</label>
-            <select name="product_id" class="form-select" id="service-product">
+            <select name="product_id" class="form-select select-search" id="service-product">
                 <option value="">(اختیاری) انتخاب پلن</option>
                 <?php foreach ($products as $p): ?>
                     <option value="<?php echo (int)$p['id']; ?>" data-type="<?php echo htmlspecialchars($p['type'], ENT_QUOTES, 'UTF-8'); ?>" data-billing="<?php echo htmlspecialchars($p['billing_cycle'], ENT_QUOTES, 'UTF-8'); ?>">
@@ -96,7 +96,7 @@
         </div>
         <div class="form-field service-fields service-hosting">
             <label class="form-label">سرور DirectAdmin</label>
-            <select name="server_id" class="form-select">
+            <select name="server_id" class="form-select select-search">
                 <option value="0">انتخاب سرور</option>
                 <?php foreach ($servers as $srv): ?>
                     <option value="<?php echo (int)$srv['id']; ?>"><?php echo htmlspecialchars($srv['name'] . ' (' . $srv['hostname'] . ')', ENT_QUOTES, 'UTF-8'); ?></option>
@@ -199,7 +199,7 @@
                                           <option value="<?php echo $key; ?>" <?php echo $s['status']===$key?'selected':''; ?>><?php echo $label; ?></option>
                                       <?php endforeach; ?>
                                   </select>
-                                  <select name="category_id" class="form-select">
+                                  <select name="category_id" class="form-select select-search">
                                       <option value="0">دسته خدمت</option>
                                       <?php foreach ($categories as $cat): ?>
                                           <option value="<?php echo (int)$cat['id']; ?>" <?php echo ($s['category_id'] ?? 0)==$cat['id']?'selected':''; ?>><?php echo htmlspecialchars($cat['name'], ENT_QUOTES, 'UTF-8'); ?></option>

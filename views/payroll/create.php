@@ -25,7 +25,7 @@ use App\Core\Date;
         <div class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;">
             <div class="form-field">
                 <label class="form-label">پرسنل</label>
-                <select name="employee_id" class="form-select" required>
+                <select name="employee_id" class="form-select select-search" required>
                     <option value="">انتخاب کنید...</option>
                     <?php foreach ($employees as $e): ?>
                         <option value="<?php echo (int)$e['id']; ?>"

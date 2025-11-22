@@ -16,7 +16,7 @@ use App\Core\Date;
         <div class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;">
             <div class="form-field">
                 <label class="form-label">قرارداد (اختیاری)</label>
-                <select name="contract_id" class="form-select">
+                <select name="contract_id" class="form-select select-search">
                     <option value="">بدون قرارداد</option>
                     <?php foreach ($contracts as $c): ?>
                         <option value="<?php echo (int)$c['id']; ?>"><?php echo htmlspecialchars($c['title'], ENT_QUOTES, 'UTF-8'); ?></option>
@@ -98,7 +98,7 @@ use App\Core\Date;
                                     <div class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;">
                                         <div class="form-field">
                                             <label class="form-label">قرارداد</label>
-                                            <select name="contract_id" class="form-select">
+                                            <select name="contract_id" class="form-select select-search">
                                                 <option value="">بدون قرارداد</option>
                                                 <?php foreach ($contracts as $c): ?>
                                                     <option value="<?php echo (int)$c['id']; ?>"
