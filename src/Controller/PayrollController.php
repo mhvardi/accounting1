@@ -93,6 +93,7 @@ class PayrollController
 
         $selectedEmployee = null;
         $contracts = [];
+        $payments  = [];
         $salesAmount = 0;
         $commission = 0;
         $percent = 0;
@@ -103,6 +104,7 @@ class PayrollController
                 $calc = $service->computeCommissionForMonth($employeeId, $year, $month, $basis);
                 $selectedEmployee = $calc['employee'];
                 $contracts       = $calc['contracts'];
+                $payments        = $calc['payments'];
                 $salesAmount     = $calc['salesAmount'];
                 $commission      = $calc['commissionAmount'];
                 $percent         = $calc['commissionPercent'];
@@ -120,6 +122,7 @@ class PayrollController
             'month'             => $month,
             'basis'             => $basis,
             'contracts'         => $contracts,
+            'payments'          => $payments,
             'salesAmount'       => $salesAmount,
             'commission'        => $commission,
             'percent'           => $percent,

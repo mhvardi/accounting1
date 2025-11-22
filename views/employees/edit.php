@@ -49,6 +49,7 @@ $commissionPercent = $employee['commission_percent'] ?? 0;
 
 // تاریخ شروع همکاری از effective_from (شمسی‌سازی)
 $startDate = Date::jDate($employee['effective_from'] ?? '');
+$categoryCompanyWide = $categoryCompanyWide ?? false;
 ?>
 <div class="card-soft">
     <div class="card-header">
@@ -141,6 +142,18 @@ $startDate = Date::jDate($employee['effective_from'] ?? '');
                             هنوز دسته خدماتی تعریف نشده است.
                         </div>
                     <?php endif; ?>
+                </div>
+                <div style="margin-top:6px;">
+                    <label class="form-checkbox">
+                        <input type="checkbox"
+                               name="category_company_wide"
+                               value="1"
+                            <?php echo $categoryCompanyWide ? 'checked' : ''; ?>>
+                        <span>محاسبه دسته‌بندی به‌صورت سراسری (بدون وابستگی به فروشنده قرارداد)</span>
+                    </label>
+                    <div style="font-size:11px;color:#6b7280;margin-top:2px;">
+                        در حالت فعال، قراردادها و دریافتی‌های دسته انتخابی حتی اگر فروشنده مشخص نشده باشد در پورسانت لحاظ می‌شوند.
+                    </div>
                 </div>
             </div>
 
