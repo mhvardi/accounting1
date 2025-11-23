@@ -167,6 +167,9 @@ class Router
             case '/servers/check':
                 (new \App\Controller\ServersController())->check();
                 break;
+            case '/servers/sync-hosting':
+                (new \App\Controller\ServersController())->syncHosting();
+                break;
 
             case '/directadmin/accounts/create':
                 (new \App\Controller\DirectAdminController())->create();

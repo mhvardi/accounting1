@@ -183,6 +183,24 @@
                     });
             });
         });
+
+        // hosting sync buttons
+        document.querySelectorAll('[data-sync-hosting]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-sync-hosting');
+                btn.textContent = 'در حال همگام‌سازی...';
+                fetch('/servers/sync-hosting?id=' + encodeURIComponent(id), {headers:{'X-Requested-With':'XMLHttpRequest'}})
+                    .then(res => res.json())
+                    .then(res => {
+                        btn.textContent = 'همگام‌سازی هاستینگ';
+                        alert(res.message || (res.success ? 'موفق' : 'ناموفق'));
+                        if (res.success) window.location.reload();
+                    }).catch(() => {
+                        btn.textContent = 'همگام‌سازی هاستینگ';
+                        alert('خطا در همگام‌سازی');
+                    });
+            });
+        });
     })();
 </script>
 
@@ -199,6 +217,7 @@
                 <th>hostname</th>
                 <th>IP</th>
                 <th>پورت</th>
+                <th>مصرف/ظرفیت</th>
                 <th>آخرین بررسی</th>
                 <th>وضعیت اتصال</th>
                 <th>سرویس‌های متصل</th>
@@ -207,9 +226,10 @@
             </thead>
             <tbody>
             <?php if (empty($servers)): ?>
-                <tr><td colspan="9">سروری ثبت نشده است.</td></tr>
+                <tr><td colspan="10">سروری ثبت نشده است.</td></tr>
             <?php else: ?>
                 <?php foreach ($servers as $srv): ?>
+                    <?php $healthRow = $health[$srv['id']] ?? []; $usage = $healthRow['usage'] ?? []; ?>
                     <tr>
                         <td><?php echo (int)$srv['id']; ?></td>
                         <td><?php echo htmlspecialchars($srv['name'], ENT_QUOTES, 'UTF-8'); ?></td>
@@ -217,11 +237,24 @@
                         <td><?php echo htmlspecialchars($srv['ip'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo htmlspecialchars($srv['port'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td>
-                            <?php echo $srv['last_checked_at'] ? htmlspecialchars($srv['last_checked_at'], ENT_QUOTES, 'UTF-8') : 'بررسی نشده'; ?>
+                            <?php if (!empty($usage['success'])): ?>
+                                <div class="micro-copy">پهنای‌باند: <?php echo htmlspecialchars($usage['bandwidth']['used'] ?? '؟', ENT_QUOTES, 'UTF-8'); ?> / <?php echo htmlspecialchars($usage['bandwidth']['limit'] ?? '∞', ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="micro-copy">دیسک: <?php echo htmlspecialchars($usage['disk']['used'] ?? '؟', ENT_QUOTES, 'UTF-8'); ?> / <?php echo htmlspecialchars($usage['disk']['limit'] ?? '∞', ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="micro-copy">کاربران: <?php echo htmlspecialchars($usage['accounts'] ?? '؟', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <?php else: ?>
+                                <span class="micro-copy">--</span>
+                                <div class="micro-copy" style="direction:ltr;">&lrm;<?php echo htmlspecialchars($usage['message'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <?php endif; ?>
                         </td>
                         <td>
-                            <div><?php echo !empty($srv['last_check_status']) ? '✅ متصل' : '⚠️ ناموفق'; ?></div>
-                            <div class="micro-copy" style="direction:ltr;">&lrm;<?php echo htmlspecialchars($srv['last_check_message'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <?php echo $srv['last_checked_at'] ? htmlspecialchars($srv['last_checked_at'], ENT_QUOTES, 'UTF-8') : 'بررسی نشده'; ?>
+                            <?php if (!empty($healthRow['checked_at'])): ?>
+                                <div class="micro-copy">الان: <?php echo htmlspecialchars($healthRow['checked_at'], ENT_QUOTES, 'UTF-8'); ?></div>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <div><?php echo !empty($healthRow['status'] ?? $srv['last_check_status']) ? '✅ متصل' : '⚠️ ناموفق'; ?></div>
+                            <div class="micro-copy" style="direction:ltr;">&lrm;<?php echo htmlspecialchars($healthRow['message'] ?? ($srv['last_check_message'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
                         </td>
                         <td>
                             <?php $attached = $connections[$srv['id']] ?? []; ?>
@@ -236,8 +269,9 @@
                                 </div>
                             <?php endif; ?>
                         </td>
-                        <td style="display:flex;gap:6px;">
+                        <td style="display:flex;gap:6px;flex-wrap:wrap;">
                             <button type="button" class="btn btn-outline" data-check-id="<?php echo (int)$srv['id']; ?>">بررسی اتصال</button>
+                            <button type="button" class="btn btn-outline" data-sync-hosting="<?php echo (int)$srv['id']; ?>">همگام‌سازی هاستینگ</button>
                             <a class="btn btn-outline btn-danger" onclick="return confirm('حذف سرور؟');" href="/servers/delete?id=<?php echo (int)$srv['id']; ?>">حذف</a>
                         </td>
                     </tr>
