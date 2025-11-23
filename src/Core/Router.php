@@ -184,6 +184,16 @@ class Router
                 (new \App\Controller\DirectAdminController())->sync();
                 break;
 
+            case '/domains/sync':
+                (new \App\Controller\DomainController())->sync();
+                break;
+            case '/domains/suspend':
+                (new \App\Controller\DomainController())->suspend();
+                break;
+            case '/domains/renew':
+                (new \App\Controller\DomainController())->renew();
+                break;
+
             case '/payroll':
                 (new \App\Controller\PayrollController())->index();
                 break;
