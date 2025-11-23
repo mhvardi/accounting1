@@ -159,6 +159,12 @@ class CustomerController
             $servicesStmt->execute([$id]);
             $services = $servicesStmt->fetchAll();
 
+            $servers = $pdo->query("SELECT id, name, hostname FROM servers")->fetchAll();
+            $serversMap = [];
+            foreach ($servers as $srv) {
+                $serversMap[$srv['id']] = $srv;
+            }
+
         } catch (PDOException $e) {
             View::renderError('خطا در بارگذاری پروفایل مشتری: ' . $e->getMessage(), $e->getTraceAsString(), Auth::user());
             return;
@@ -173,6 +179,7 @@ class CustomerController
             'dueTotal'      => $dueTotal,
             'payments'      => $payments,
             'services'      => $services,
+            'serversMap'    => $serversMap ?? [],
         ]);
     }
 }

@@ -4,6 +4,7 @@
 /** @var array $products */
 /** @var array $categories */
 /** @var array $servers */
+/** @var array $serversMap */
 ?>
 <div class="topbar-title" style="margin-bottom:8px;">
     <span class="emoji">🛰️</span>
@@ -39,6 +40,7 @@
                 <th>خرید</th>
                 <th>دوره</th>
                 <th>قرارداد</th>
+                <th>سرور</th>
                 <th>وضعیت</th>
                 <th>شروع</th>
                 <th>سررسید</th>
@@ -48,12 +50,16 @@
             </thead>
             <tbody>
             <?php if (empty($services)): ?>
-                <tr><td colspan="13">سرویسی ثبت نشده است.</td></tr>
+                <tr><td colspan="14">سرویسی ثبت نشده است.</td></tr>
             <?php else: ?>
                 <?php foreach ($services as $s): $meta = json_decode($s['meta_json'] ?? '', true) ?: []; ?>
                     <tr>
                         <td><?php echo (int)$s['id']; ?></td>
-                        <td><?php echo htmlspecialchars($s['customer_name'] ?? '---', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td>
+                            <a href="/customers/profile?id=<?php echo (int)($s['customer_id'] ?? 0); ?>" class="link-soft">
+                                <?php echo htmlspecialchars($s['customer_name'] ?? '---', ENT_QUOTES, 'UTF-8'); ?>
+                            </a>
+                        </td>
                         <td>
                             <?php echo htmlspecialchars($s['category_name'] ?? ($s['product_name'] ?? '---'), ENT_QUOTES, 'UTF-8'); ?>
                             <div class="micro-copy" style="margin-top:2px;">نوع: <?php echo htmlspecialchars($s['category_slug'] ?? $s['product_type'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
@@ -63,6 +69,13 @@
                         <td><?php echo number_format((int)($s['cost_amount'] ?? 0)); ?></td>
                         <td><?php echo htmlspecialchars($s['billing_cycle'] ?? ($s['product_billing_cycle'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo $s['contract_id'] ? '#'.$s['contract_id'] : '—'; ?></td>
+                        <td>
+                            <?php $srvId = (int)($meta['panel']['server_id'] ?? 0); ?>
+                            <?php echo $srvId ? htmlspecialchars($serversMap[$srvId]['name'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8') : '—'; ?>
+                            <div class="micro-copy" style="direction:ltr;">
+                                <?php echo $srvId ? htmlspecialchars($serversMap[$srvId]['hostname'] ?? '', ENT_QUOTES, 'UTF-8') : ''; ?>
+                            </div>
+                        </td>
                         <td><?php echo htmlspecialchars($s['status'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo \App\Core\Date::jDate($s['start_date']); ?></td>
                         <td><?php echo \App\Core\Date::jDate($s['next_due_date']); ?></td>
@@ -92,6 +105,12 @@
                                 <input type="text" name="keywords" value="<?php echo htmlspecialchars(implode(',', $meta['keywords'] ?? []), ENT_QUOTES, 'UTF-8'); ?>" class="form-input" style="width:160px;">
                                 <input type="text" name="da_username" value="<?php echo htmlspecialchars($meta['panel']['directadmin_username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" class="form-input" style="width:120px;">
                                 <label class="chip-toggle"><input type="checkbox" name="da_sync" <?php echo !empty($meta['panel']['sync'])?'checked':''; ?>> DA</label>
+                                <select name="server_id" class="form-select" style="width:140px;">
+                                    <option value="0">سرور DirectAdmin</option>
+                                    <?php foreach ($servers as $srv): ?>
+                                        <option value="<?php echo (int)$srv['id']; ?>" <?php echo ($meta['panel']['server_id'] ?? 0)==$srv['id']?'selected':''; ?>><?php echo htmlspecialchars($srv['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                                 <input type="text" name="search_property" value="<?php echo htmlspecialchars($meta['search_console']['property'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" class="form-input" style="width:160px;">
                                 <input type="text" name="start_date" value="<?php echo \App\Core\Date::jDate($s['start_date']); ?>" class="form-input jalali-picker" style="width:110px;">
                                 <input type="text" name="next_due_date" value="<?php echo \App\Core\Date::jDate($s['next_due_date']); ?>" class="form-input jalali-picker" style="width:110px;">
