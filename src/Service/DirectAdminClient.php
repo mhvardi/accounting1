@@ -40,7 +40,7 @@ class DirectAdminClient
         return sprintf('%s://%s:%d', $scheme, $host, $port);
     }
 
-    public function request(string $endpoint, array $params = [], string $method = 'GET', bool $appendJsonFlag = true): array
+    public function request(string $endpoint, array $params = [], string $method = 'GET', bool $appendJsonFlag = true, string $logType = 'hosting'): array
     {
         $url = rtrim($this->baseUrl(), '/') . '/' . ltrim($endpoint, '/');
         if ($appendJsonFlag && stripos($endpoint, 'CMD_API_') !== false) {
@@ -92,7 +92,7 @@ class DirectAdminClient
         $success = ($lastError === '' && $httpCode >= 200 && $httpCode < 300);
         $message = $lastError ?: 'HTTP ' . $httpCode;
 
-        $this->log('hosting', $endpoint, $params, $decoded ?? $responseBody, $success, $message);
+        $this->log($logType, $endpoint, $params, $decoded ?? $responseBody, $success, $message);
 
         return [
             'success' => $success,
@@ -186,7 +186,7 @@ class DirectAdminClient
 
     public function resellerUsage(): array
     {
-        return $this->request('/CMD_API_SHOW_RESELLER_USAGE', [], 'GET');
+        return $this->request('/CMD_API_SHOW_RESELLER_USAGE', [], 'GET', true, 'hosting');
     }
 
     public function getResellerConfig(): array
@@ -196,6 +196,6 @@ class DirectAdminClient
 
     public function testConnection(): array
     {
-        return $this->request('/CMD_API_SHOW_RESELLER_USAGE', [], 'GET');
+        return $this->request('/CMD_API_SHOW_RESELLER_USAGE', [], 'GET', true, 'hosting');
     }
 }
