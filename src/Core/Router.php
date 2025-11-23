@@ -171,6 +171,19 @@ class Router
                 (new \App\Controller\ServersController())->syncHosting();
                 break;
 
+            case '/hosting/sync':
+                (new \App\Controller\HostingController())->sync();
+                break;
+            case '/hosting/suspend':
+                (new \App\Controller\HostingController())->suspend();
+                break;
+            case '/hosting/unsuspend':
+                (new \App\Controller\HostingController())->unsuspend();
+                break;
+            case '/hosting/reconcile':
+                (new \App\Controller\HostingController())->reconcile();
+                break;
+
             case '/directadmin/accounts/create':
                 (new \App\Controller\DirectAdminController())->create();
                 break;
