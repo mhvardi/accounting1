@@ -1,0 +1,8 @@
+{
+  "info": {"title": "DirectAdmin Reseller API", "version": "1.0.0"},
+  "paths": {
+    "/api/reseller/users": {"get": {"summary": "List users"}},
+    "/api/reseller/users/{username}": {"get": {"summary": "Get user"}},
+    "/api/reseller/packages": {"get": {"summary": "List packages"}}
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "info": {"title": "Domain Reseller API", "version": "1.0.0"},
+  "paths": {
+    "/balance": {"get": {"operationId": "getResellerBalance"}},
+    "/domains": {"get": {"operationId": "listDomains"}},
+    "/domains/{domain}": {"get": {"operationId": "getDomainInfo"}},
+    "/domains/register": {"post": {"operationId": "registerDomain"}},
+    "/domains/renew": {"post": {"operationId": "renewDomain"}},
+    "/domains/transfer": {"post": {"operationId": "transferDomain"}},
+    "/domains/{domain}/suspend": {"post": {"operationId": "suspendDomain"}},
+    "/domains/{domain}/unsuspend": {"post": {"operationId": "unsuspendDomain"}},
+    "/domains/{domain}/nameservers": {"put": {"operationId": "updateNameservers"}},
+    "/domains/{domain}/dns": {"get": {"operationId": "getDNSRecords"}},
+    "/domains/{domain}/dns": {"post": {"operationId": "setDNSRecord"}},
+    "/domains/{domain}/dns/{recordId}": {"delete": {"operationId": "deleteDNSRecord"}}
+  }
+}

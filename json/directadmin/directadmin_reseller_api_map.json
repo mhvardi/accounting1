@@ -1,0 +1,8 @@
+{
+  "CMD_API_ACCOUNT_USER": {"method": "POST", "description": "Manage DirectAdmin user accounts"},
+  "CMD_API_SELECT_USERS": {"method": "POST", "description": "Select and manage users"},
+  "CMD_API_SHOW_USER_CONFIG": {"method": "GET", "description": "Show user configuration"},
+  "CMD_API_PACKAGES_USER": {"method": "GET", "description": "List available user packages"},
+  "CMD_API_SHOW_USER_USAGE": {"method": "GET", "description": "Fetch usage for a user"},
+  "CMD_API_SHOW_RESELLER_USAGE": {"method": "GET", "description": "Fetch reseller usage"}
+}

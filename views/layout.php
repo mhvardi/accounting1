@@ -69,6 +69,16 @@ function nav_active(string $path, string $current): string {
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="/hosting" class="nav-link <?php echo nav_active('/hosting', $currentPath); ?>">
+                            <span class="icon">🗄️</span><span class="text">هاستینگ</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/domains" class="nav-link <?php echo nav_active('/domains', $currentPath); ?>">
+                            <span class="icon">🌐</span><span class="text">دامنه‌ها</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="/contracts" class="nav-link <?php echo nav_active('/contracts', $currentPath); ?>">
                             <span class="icon">📄</span><span class="text">قراردادها</span>
                         </a>
@@ -132,6 +142,21 @@ function nav_active(string $path, string $current): string {
                     <li class="nav-item">
                         <a href="/servers" class="nav-link <?php echo nav_active('/servers', $currentPath); ?>">
                             <span class="icon">🖥️</span><span class="text">سرورها</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/audit-logs" class="nav-link <?php echo nav_active('/audit-logs', $currentPath); ?>">
+                            <span class="icon">🧾</span><span class="text">گزارش ممیزی</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/notifications" class="nav-link <?php echo nav_active('/notifications', $currentPath); ?>">
+                            <span class="icon">🔔</span><span class="text">اعلان‌ها</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/rbac" class="nav-link <?php echo nav_active('/rbac', $currentPath); ?>">
+                            <span class="icon">🛡️</span><span class="text">نقش‌ها و دسترسی</span>
                         </a>
                     </li>
                 </ul>
