@@ -151,19 +151,56 @@ class CustomerController
             $paymentsStmt->execute([$id, $id]);
             $payments = $paymentsStmt->fetchAll();
 
-            $servicesStmt = $pdo->prepare("SELECT s.*, p.name AS product_name, p.type AS product_type
-                                           FROM service_instances s
-                                           LEFT JOIN products p ON p.id = s.product_id
-                                           WHERE s.customer_id = ?
-                                           ORDER BY s.id DESC");
+            $servicesStmt = $pdo->prepare("SELECT s.*, p.name AS product_name, p.type AS product_type"
+                                           . " FROM service_instances s"
+                                           . " LEFT JOIN products p ON p.id = s.product_id"
+                                           . " WHERE s.customer_id = ?"
+                                           . " ORDER BY s.id DESC");
             $servicesStmt->execute([$id]);
             $services = $servicesStmt->fetchAll();
 
-            $servers = $pdo->query("SELECT id, name, hostname FROM servers")->fetchAll();
+            $servers = $pdo->query("SELECT id, name, hostname, provider, last_check_message FROM servers")->fetchAll();
             $serversMap = [];
             foreach ($servers as $srv) {
                 $serversMap[$srv['id']] = $srv;
             }
+
+            $domainServices  = [];
+            $hostingServices = [];
+            $unsyncedDomains = [];
+            foreach ($services as $svc) {
+                $meta        = json_decode($svc['meta_json'] ?? '', true) ?: [];
+                $type        = $svc['product_type'] ?: ($meta['product_type'] ?? '');
+                $svc['meta'] = $meta;
+
+                if ($type === 'domain') {
+                    $domainServices[] = $svc;
+                    $syncStatus       = $meta['domain_sync_status'] ?? $meta['panel']['sync_status'] ?? 'pending';
+                    if ($syncStatus !== 'ok') {
+                        $unsyncedDomains[] = $svc;
+                    }
+                } elseif ($type === 'hosting') {
+                    $hostingServices[] = $svc;
+                }
+            }
+
+            $serviceIds  = array_column($services, 'id');
+            $serviceLogs = [];
+            if (!empty($serviceIds)) {
+                $placeholders = implode(',', array_fill(0, count($serviceIds), '?'));
+                $logsStmt = $pdo->prepare("SELECT l.*, p.name AS product_name"
+                                         . " FROM directadmin_logs l"
+                                         . " LEFT JOIN service_instances s ON s.id = l.service_id"
+                                         . " LEFT JOIN products p ON p.id = s.product_id"
+                                         . " WHERE l.service_id IN ($placeholders)"
+                                         . " ORDER BY l.id DESC"
+                                         . " LIMIT 30");
+                $logsStmt->execute($serviceIds);
+                $serviceLogs = $logsStmt->fetchAll();
+            }
+
+            $registrarBalance = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'registrar' ORDER BY id DESC LIMIT 1")?->fetchColumn();
+            $resellerBalance  = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'reseller' ORDER BY id DESC LIMIT 1")?->fetchColumn();
 
         } catch (PDOException $e) {
             View::renderError('خطا در بارگذاری پروفایل مشتری: ' . $e->getMessage(), $e->getTraceAsString(), Auth::user());
@@ -180,6 +217,12 @@ class CustomerController
             'payments'      => $payments,
             'services'      => $services,
             'serversMap'    => $serversMap ?? [],
+            'domainServices'=> $domainServices,
+            'hostingServices' => $hostingServices,
+            'unsyncedDomains' => $unsyncedDomains,
+            'serviceLogs'     => $serviceLogs,
+            'registrarBalance'=> $registrarBalance ?: '—',
+            'resellerBalance' => $resellerBalance ?: '—',
         ]);
     }
 }
