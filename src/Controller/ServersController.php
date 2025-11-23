@@ -35,6 +35,7 @@ class ServersController
             }
 
             $servers = $pdo->query("SELECT * FROM servers ORDER BY id DESC")->fetchAll();
+            $connections = $this->mapConnections($pdo);
         } catch (PDOException $e) {
             View::renderError('خطا در مدیریت سرور: ' . $e->getMessage(), $e->getTraceAsString(), Auth::user());
             return;
@@ -43,8 +44,34 @@ class ServersController
         View::render('servers/index', [
             'user' => Auth::user(),
             'servers' => $servers,
+            'connections' => $connections,
             'flash' => $flash,
         ]);
+    }
+
+    private function mapConnections($pdo): array
+    {
+        $services = $pdo->query("SELECT s.*, c.name AS customer_name FROM service_instances s LEFT JOIN customers c ON c.id = s.customer_id ORDER BY s.id DESC")->fetchAll();
+        $map = [];
+        foreach ($services as $service) {
+            $meta = json_decode($service['meta_json'] ?? '', true) ?: [];
+            $serverId = (int)($meta['panel']['server_id'] ?? 0);
+            if ($serverId <= 0) {
+                continue;
+            }
+            if (!isset($map[$serverId])) {
+                $map[$serverId] = [];
+            }
+            $map[$serverId][] = [
+                'service_id' => (int)$service['id'],
+                'customer_id' => (int)($service['customer_id'] ?? 0),
+                'customer_name' => $service['customer_name'] ?? '',
+                'domain' => $meta['domain'] ?? '',
+                'status' => $service['status'] ?? '',
+            ];
+        }
+
+        return $map;
     }
 
     private function isAjax(): bool
