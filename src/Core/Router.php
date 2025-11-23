@@ -200,6 +200,28 @@ class Router
                 (new \App\Controller\JsonController())->domainOpenApi();
                 break;
 
+            case '/domains/create':
+                (new \App\Controller\DomainController())->create();
+                break;
+            case '/domains/renew':
+                (new \App\Controller\DomainController())->renew();
+                break;
+            case '/domains/transfer':
+                (new \App\Controller\DomainController())->transfer();
+                break;
+            case '/domains/suspend':
+                (new \App\Controller\DomainController())->suspend();
+                break;
+            case '/domains/unsuspend':
+                (new \App\Controller\DomainController())->unsuspend();
+                break;
+            case '/domains/delete':
+                (new \App\Controller\DomainController())->delete();
+                break;
+            case '/domains/list-unsynced':
+                (new \App\Controller\DomainController())->listUnsynced();
+                break;
+
             default:
                 http_response_code(404);
                 echo "404 Not Found";
