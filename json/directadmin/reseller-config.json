@@ -1,0 +1,9 @@
+{
+  "supports_login_key": true,
+  "default_port": 2222,
+  "supports_ssl": true,
+  "limits": {
+    "max_users": 5000,
+    "max_packages": 200
+  }
+}

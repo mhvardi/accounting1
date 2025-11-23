@@ -733,3 +733,144 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- --------------------------------------------------------
+-- Table structure for hosting_accounts
+CREATE TABLE IF NOT EXISTS `hosting_accounts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `customer_id` int(11) DEFAULT NULL,
+  `server_id` int(11) DEFAULT NULL,
+  `da_username` varchar(190) NOT NULL,
+  `primary_domain` varchar(255) NOT NULL,
+  `package_name` varchar(190) DEFAULT NULL,
+  `status` enum('active','suspended','pending') DEFAULT 'pending',
+  `usage_disk_mb` int(11) DEFAULT 0,
+  `usage_bw_mb` int(11) DEFAULT 0,
+  `last_sync_at` datetime DEFAULT NULL,
+  `remote_id` varchar(190) DEFAULT NULL,
+  `meta_json` json DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `customer_id` (`customer_id`),
+  KEY `server_id` (`server_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- Table structure for domains
+CREATE TABLE IF NOT EXISTS `domains` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `customer_id` int(11) DEFAULT NULL,
+  `reseller_provider` varchar(100) DEFAULT NULL,
+  `domain_name` varchar(255) NOT NULL,
+  `status` enum('active','suspended','pending','expired','transfering') DEFAULT 'pending',
+  `expires_at` date DEFAULT NULL,
+  `auto_renew` tinyint(1) NOT NULL DEFAULT 0,
+  `nameservers_json` json DEFAULT NULL,
+  `lock_status` varchar(50) DEFAULT NULL,
+  `dns_records_json` json DEFAULT NULL,
+  `whois_json` json DEFAULT NULL,
+  `last_sync_at` datetime DEFAULT NULL,
+  `remote_id` varchar(190) DEFAULT NULL,
+  `meta_json` json DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `domain_unique` (`domain_name`),
+  KEY `customer_id` (`customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- Table structure for sync_logs
+CREATE TABLE IF NOT EXISTS `sync_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` enum('hosting','domain') NOT NULL,
+  `customer_id` int(11) DEFAULT NULL,
+  `service_id` int(11) DEFAULT NULL,
+  `action` varchar(50) NOT NULL,
+  `request_json` json DEFAULT NULL,
+  `response_json` json DEFAULT NULL,
+  `success` tinyint(1) NOT NULL DEFAULT 0,
+  `message` varchar(255) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `customer_id` (`customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- Table structure for audit_logs
+CREATE TABLE IF NOT EXISTS `audit_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `actor_user_id` int(11) DEFAULT NULL,
+  `customer_id` int(11) DEFAULT NULL,
+  `entity_type` varchar(50) NOT NULL,
+  `entity_id` int(11) DEFAULT NULL,
+  `action` varchar(100) NOT NULL,
+  `before_json` json DEFAULT NULL,
+  `after_json` json DEFAULT NULL,
+  `request_json` json DEFAULT NULL,
+  `response_json` json DEFAULT NULL,
+  `success` tinyint(1) NOT NULL DEFAULT 0,
+  `message` varchar(255) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `customer_id` (`customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- Table structure for notifications
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `customer_id` int(11) DEFAULT NULL,
+  `type` varchar(100) NOT NULL,
+  `severity` enum('info','warn','critical') NOT NULL DEFAULT 'info',
+  `title` varchar(255) NOT NULL,
+  `body` text,
+  `meta_json` json DEFAULT NULL,
+  `read_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- Table structure for notification_rules
+CREATE TABLE IF NOT EXISTS `notification_rules` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `scope` enum('hosting','domain','server','balance') NOT NULL,
+  `type` enum('expiry','usage','health','low_balance') NOT NULL,
+  `threshold_json` json DEFAULT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- Table structure for roles and RBAC
+CREATE TABLE IF NOT EXISTS `roles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(190) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `permissions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `key` varchar(190) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `key` (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `role_permissions` (
+  `role_id` int(11) NOT NULL,
+  `permission_id` int(11) NOT NULL,
+  PRIMARY KEY (`role_id`,`permission_id`),
+  KEY `permission_id` (`permission_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `user_roles` (
+  `user_id` int(11) NOT NULL,
+  `role_id` int(11) NOT NULL,
+  PRIMARY KEY (`user_id`,`role_id`),
+  KEY `role_id` (`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
