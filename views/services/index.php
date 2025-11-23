@@ -41,6 +41,8 @@
                 <th>دوره</th>
                 <th>قرارداد</th>
                 <th>سرور</th>
+                <th>سینک DA</th>
+                <th>پیام سینک</th>
                 <th>وضعیت</th>
                 <th>شروع</th>
                 <th>سررسید</th>
@@ -50,7 +52,7 @@
             </thead>
             <tbody>
             <?php if (empty($services)): ?>
-                <tr><td colspan="14">سرویسی ثبت نشده است.</td></tr>
+                <tr><td colspan="16">سرویسی ثبت نشده است.</td></tr>
             <?php else: ?>
                 <?php foreach ($services as $s): $meta = json_decode($s['meta_json'] ?? '', true) ?: []; ?>
                     <tr>
@@ -74,6 +76,16 @@
                             <?php echo $srvId ? htmlspecialchars($serversMap[$srvId]['name'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8') : '—'; ?>
                             <div class="micro-copy" style="direction:ltr;">
                                 <?php echo $srvId ? htmlspecialchars($serversMap[$srvId]['hostname'] ?? '', ENT_QUOTES, 'UTF-8') : ''; ?>
+                            </div>
+                        </td>
+                        <td>
+                            <?php $panel = $meta['panel'] ?? []; ?>
+                            <div><?php echo htmlspecialchars($panel['sync_status'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="micro-copy"><?php echo !empty($panel['sync_at']) ? htmlspecialchars($panel['sync_at'], ENT_QUOTES, 'UTF-8') : ''; ?></div>
+                        </td>
+                        <td>
+                            <div class="micro-copy" style="max-width:200px;white-space:normal;">
+                                <?php echo htmlspecialchars($panel['sync_message'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                             </div>
                         </td>
                         <td><?php echo htmlspecialchars($s['status'], ENT_QUOTES, 'UTF-8'); ?></td>
@@ -111,6 +123,15 @@
                                         <option value="<?php echo (int)$srv['id']; ?>" <?php echo ($meta['panel']['server_id'] ?? 0)==$srv['id']?'selected':''; ?>><?php echo htmlspecialchars($srv['name'], ENT_QUOTES, 'UTF-8'); ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                                <select name="da_action" class="form-select" style="width:140px;">
+                                    <option value="">عملیات DA</option>
+                                    <option value="sync">Sync</option>
+                                    <option value="create">Create</option>
+                                    <option value="suspend">Suspend</option>
+                                    <option value="unsuspend">Unsuspend</option>
+                                    <option value="delete">Delete</option>
+                                </select>
+                                <label class="chip-toggle"><input type="checkbox" name="da_log_only"> فقط لاگ</label>
                                 <input type="text" name="search_property" value="<?php echo htmlspecialchars($meta['search_console']['property'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" class="form-input" style="width:160px;">
                                 <input type="text" name="start_date" value="<?php echo \App\Core\Date::jDate($s['start_date']); ?>" class="form-input jalali-picker" style="width:110px;">
                                 <input type="text" name="next_due_date" value="<?php echo \App\Core\Date::jDate($s['next_due_date']); ?>" class="form-input jalali-picker" style="width:110px;">
