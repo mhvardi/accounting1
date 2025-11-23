@@ -9,4 +9,6 @@ return array (
   'gateway_db_user' => 'vardi_pay',
   'gateway_db_pass' => 'g646qI4bPLoa5fCC',
   'timezone' => 'Asia/Tehran',
+  'domain_reseller_url' => 'https://reseller.local/api',
+  'domain_reseller_api_key' => null,
 );

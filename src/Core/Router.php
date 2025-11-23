@@ -187,11 +187,35 @@ class Router
             case '/domains/sync':
                 (new \App\Controller\DomainController())->sync();
                 break;
+            case '/domains/register':
+                (new \App\Controller\DomainController())->register();
+                break;
             case '/domains/suspend':
                 (new \App\Controller\DomainController())->suspend();
                 break;
+            case '/domains/unsuspend':
+                (new \App\Controller\DomainController())->unsuspend();
+                break;
+            case '/domains/delete':
+                (new \App\Controller\DomainController())->delete();
+                break;
+            case '/domains/transfer':
+                (new \App\Controller\DomainController())->transfer();
+                break;
             case '/domains/renew':
                 (new \App\Controller\DomainController())->renew();
+                break;
+            case '/domains/dns':
+                (new \App\Controller\DomainController())->dns();
+                break;
+            case '/domains/dns/delete':
+                (new \App\Controller\DomainController())->dnsDelete();
+                break;
+            case '/domains/whois':
+                (new \App\Controller\DomainController())->whois();
+                break;
+            case '/domains/reconcile':
+                (new \App\Controller\DomainController())->reconcile();
                 break;
 
             case '/payroll':
