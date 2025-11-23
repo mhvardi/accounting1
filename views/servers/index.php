@@ -201,12 +201,13 @@
                 <th>پورت</th>
                 <th>آخرین بررسی</th>
                 <th>وضعیت اتصال</th>
+                <th>سرویس‌های متصل</th>
                 <th>اقدامات</th>
             </tr>
             </thead>
             <tbody>
             <?php if (empty($servers)): ?>
-                <tr><td colspan="8">سروری ثبت نشده است.</td></tr>
+                <tr><td colspan="9">سروری ثبت نشده است.</td></tr>
             <?php else: ?>
                 <?php foreach ($servers as $srv): ?>
                     <tr>
@@ -221,6 +222,19 @@
                         <td>
                             <div><?php echo !empty($srv['last_check_status']) ? '✅ متصل' : '⚠️ ناموفق'; ?></div>
                             <div class="micro-copy" style="direction:ltr;">&lrm;<?php echo htmlspecialchars($srv['last_check_message'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+                        </td>
+                        <td>
+                            <?php $attached = $connections[$srv['id']] ?? []; ?>
+                            <?php if (empty($attached)): ?>
+                                <span class="micro-copy">بدون اتصال</span>
+                            <?php else: ?>
+                                <div class="micro-copy"><?php echo count($attached); ?> سرویس</div>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                    <?php foreach ($attached as $conn): ?>
+                                        <span class="chip">#<?php echo (int)$conn['service_id']; ?> / <?php echo htmlspecialchars($conn['customer_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                         </td>
                         <td style="display:flex;gap:6px;">
                             <button type="button" class="btn btn-outline" data-check-id="<?php echo (int)$srv['id']; ?>">بررسی اتصال</button>

@@ -6,6 +6,7 @@
  * @var int $paidTotal
  * @var int $dueTotal
  * @var array $payments
+ * @var array $serversMap
  */
 use App\Core\Date;
 use App\Core\Str;
@@ -83,6 +84,7 @@ use App\Core\Str;
                 <th>#</th>
                 <th>محصول</th>
                 <th>دامنه/سایت</th>
+                <th>سرور</th>
                 <th>وضعیت</th>
                 <th>شروع</th>
                 <th>سررسید</th>
@@ -97,6 +99,10 @@ use App\Core\Str;
                         <td><?php echo (int)$s['id']; ?></td>
                         <td><?php echo htmlspecialchars(($s['product_name'] ?? '—') . ' / ' . ($s['product_type'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo htmlspecialchars($meta['domain'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td>
+                            <?php $srvId = (int)($meta['panel']['server_id'] ?? 0); ?>
+                            <?php echo $srvId ? htmlspecialchars($serversMap[$srvId]['name'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8') : '—'; ?>
+                        </td>
                         <td><?php echo htmlspecialchars($s['status'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo Date::jDate($s['start_date']); ?></td>
                         <td><?php echo Date::jDate($s['next_due_date']); ?></td>

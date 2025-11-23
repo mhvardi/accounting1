@@ -29,6 +29,10 @@ class ServicesController
             $products  = $pdo->query("SELECT id, name, type, billing_cycle FROM products ORDER BY type, name")->fetchAll();
             $categories = $pdo->query("SELECT id, name, slug FROM product_categories ORDER BY is_primary DESC, id DESC")->fetchAll();
             $servers   = $pdo->query("SELECT id, name, hostname FROM servers ORDER BY id DESC")->fetchAll();
+            $serversMap = [];
+            foreach ($servers as $srv) {
+                $serversMap[$srv['id']] = $srv;
+            }
         } catch (PDOException $e) {
             View::renderError('خطا در بارگذاری سرویس‌ها: ' . $e->getMessage(), $e->getTraceAsString(), Auth::user());
             return;
@@ -41,6 +45,7 @@ class ServicesController
             'products' => $products,
             'categories' => $categories,
             'servers' => $servers,
+            'serversMap' => $serversMap,
             'months' => Date::monthNames(),
             'years' => Date::financialYears(),
         ]);

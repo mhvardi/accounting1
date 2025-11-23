@@ -187,6 +187,19 @@ class Router
                 (new \App\Controller\MiscSitesController())->index();
                 break;
 
+            case '/json/directadmin/reseller-config.json':
+                (new \App\Controller\JsonController())->directAdminConfig();
+                break;
+            case '/json/directadmin/swagger.json':
+                (new \App\Controller\JsonController())->directAdminSwagger();
+                break;
+            case '/json/directadmin/directadmin_reseller_api_map.json':
+                (new \App\Controller\JsonController())->directAdminApiMap();
+                break;
+            case '/json/domin/openapi (1).json':
+                (new \App\Controller\JsonController())->domainOpenApi();
+                break;
+
             default:
                 http_response_code(404);
                 echo "404 Not Found";
