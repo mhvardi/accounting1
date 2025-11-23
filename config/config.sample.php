@@ -9,4 +9,6 @@ return [
     'gateway_db_user' => 'root',
     'gateway_db_pass' => '',
     'timezone' => 'Asia/Tehran',
+    'domain_reseller_url' => 'https://reseller.local/api',
+    'domain_reseller_api_key' => null,
 ];

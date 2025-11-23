@@ -161,6 +161,11 @@ class DomainResellerClient
         return $this->request('POST', '/domains/' . $domain . '/unsuspend');
     }
 
+    public function deleteDomain(string $domain): array
+    {
+        return $this->request('DELETE', '/domains/' . $domain);
+    }
+
     public function updateNameservers(string $domain, array $ns): array
     {
         return $this->request('PUT', '/domains/' . $domain . '/nameservers', ['nameservers' => $ns]);
@@ -179,6 +184,11 @@ class DomainResellerClient
     public function deleteDNSRecord(string $domain, string $recordId): array
     {
         return $this->request('DELETE', '/domains/' . $domain . '/dns/' . $recordId);
+    }
+
+    public function whoisLookup(string $domain): array
+    {
+        return $this->request('GET', '/domains/' . $domain . '/whois');
     }
 
     public function webhookVerifyAndParse(array $request): array

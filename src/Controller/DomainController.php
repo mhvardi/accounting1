@@ -4,7 +4,7 @@ namespace App\Controller;
 use App\Core\Auth;
 use App\Core\Database;
 use App\Core\Str;
-use PDO;
+use App\Service\DomainService;
 use PDOException;
 
 class DomainController
@@ -24,44 +24,66 @@ class DomainController
         echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 
-    private function loadService(PDO $pdo, int $id)
+    private function loadService(int $id)
     {
-        $stmt = $pdo->prepare('SELECT s.*, p.type AS product_type FROM service_instances s LEFT JOIN products p ON p.id = s.product_id WHERE s.id = ?');
+        $pdo = Database::connection();
+        $stmt = $pdo->prepare('SELECT s.*, p.type AS product_type, c.email AS customer_email FROM service_instances s LEFT JOIN products p ON p.id = s.product_id LEFT JOIN customers c ON c.id = s.customer_id WHERE s.id = ?');
         $stmt->execute([$id]);
         return $stmt->fetch();
     }
 
-    private function log(PDO $pdo, int $serviceId, string $action, bool $success, string $message): void
+    private function buildPayload(string $action): array
     {
-        try {
-            $stmt = $pdo->prepare('INSERT INTO directadmin_logs (service_id, server_id, action, status, message, response, created_at) VALUES (?,?,?,?,?,?,?)');
-            $stmt->execute([
-                $serviceId,
-                0,
-                $action,
-                $success ? 'success' : 'error',
-                $message,
-                null,
-                date('Y-m-d H:i:s'),
-            ]);
-        } catch (PDOException $e) {
-            // ignore log errors
+        $payload = [];
+        $nameservers = isset($_POST['nameservers']) ? (array)$_POST['nameservers'] : [];
+        if (empty($nameservers) && !empty($_POST['nameservers_csv'])) {
+            $nameservers = array_filter(array_map('trim', explode(',', (string)$_POST['nameservers_csv'])));
         }
+
+        switch ($action) {
+            case 'register':
+            case 'renew':
+                $payload['years'] = (int)($_POST['years'] ?? 1);
+                // no break
+            case 'transfer':
+                if ($action === 'transfer') {
+                    $payload['auth_code'] = trim($_POST['auth_code'] ?? '');
+                }
+                $payload['nameservers'] = $nameservers;
+                if (!empty($_POST['contact_json'])) {
+                    $contact = json_decode((string)$_POST['contact_json'], true);
+                    if (is_array($contact)) {
+                        $payload['contact'] = $contact;
+                    }
+                }
+                break;
+            case 'dns_set':
+                if (!empty($_POST['record_json'])) {
+                    $record = json_decode((string)$_POST['record_json'], true);
+                    if (is_array($record)) {
+                        $payload['record'] = $record;
+                    }
+                }
+                break;
+            case 'dns_delete':
+                $payload['record_id'] = $_POST['record_id'] ?? '';
+                break;
+        }
+
+        return $payload;
     }
 
     private function runAction(string $action): void
     {
         $this->ensureAuth();
         $serviceId = (int)Str::normalizeDigits($_POST['service_id'] ?? $_GET['service_id'] ?? '0');
-
         if ($serviceId <= 0) {
             $this->respond(['success' => false, 'message' => 'شناسه سرویس معتبر نیست'], 422);
             return;
         }
 
         try {
-            $pdo = Database::connection();
-            $service = $this->loadService($pdo, $serviceId);
+            $service = $this->loadService($serviceId);
             if (!$service) {
                 $this->respond(['success' => false, 'message' => 'سرویس یافت نشد'], 404);
                 return;
@@ -71,49 +93,35 @@ class DomainController
                 return;
             }
 
-            $meta = json_decode($service['meta_json'] ?? '', true) ?: [];
-            $now  = date('Y-m-d H:i:s');
-            $message = 'عملیات ثبت شد';
-            $status  = 'ok';
-            $serviceStatus = $service['status'];
+            $domainService = new DomainService(Auth::user()['id'] ?? null);
+            $payload = $this->buildPayload($action);
+            $result = $domainService->perform($service, $action, $payload);
 
-            switch ($action) {
-                case 'suspend':
-                    $status  = 'suspended';
-                    $message = 'دامنه معلق شد';
-                    $serviceStatus = 'suspended';
-                    break;
-                case 'renew':
-                    $status  = 'renewed';
-                    $message = 'تمدید دامنه ثبت شد';
-                    break;
-                default:
-                    $message = 'دامنه سینک شد';
-                    $status  = 'ok';
-            }
-
-            $meta['domain_sync_status']  = $status;
-            $meta['domain_sync_message'] = $message;
-            $meta['domain_sync_at']      = $now;
-
-            $updateStmt = $pdo->prepare('UPDATE service_instances SET meta_json = ?, status = ?, updated_at = ? WHERE id = ?');
-            $updateStmt->execute([
-                json_encode($meta, JSON_UNESCAPED_UNICODE),
-                $serviceStatus,
-                $now,
-                $serviceId,
-            ]);
-
-            $this->log($pdo, $serviceId, $action, true, $message);
-            $this->respond(['success' => true, 'message' => $message, 'meta' => $meta]);
+            $code = $result['success'] ? 200 : 500;
+            $this->respond([
+                'success' => $result['success'] ?? false,
+                'message' => $result['message'] ?? '',
+                'response' => $result['data'] ?? null,
+                'persisted' => $result['persisted'] ?? null,
+            ], $code);
         } catch (PDOException $e) {
             $this->respond(['success' => false, 'message' => 'خطای پایگاه داده: ' . $e->getMessage()], 500);
         }
     }
 
-    public function sync(): void
+    public function register(): void
     {
-        $this->runAction('sync');
+        $this->runAction('register');
+    }
+
+    public function renew(): void
+    {
+        $this->runAction('renew');
+    }
+
+    public function transfer(): void
+    {
+        $this->runAction('transfer');
     }
 
     public function suspend(): void
@@ -121,8 +129,45 @@ class DomainController
         $this->runAction('suspend');
     }
 
-    public function renew(): void
+    public function unsuspend(): void
     {
-        $this->runAction('renew');
+        $this->runAction('unsuspend');
+    }
+
+    public function delete(): void
+    {
+        $this->runAction('delete');
+    }
+
+    public function sync(): void
+    {
+        $this->runAction('sync');
+    }
+
+    public function dns(): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            $this->runAction('dns_set');
+        } else {
+            $this->runAction('dns_get');
+        }
+    }
+
+    public function dnsDelete(): void
+    {
+        $this->runAction('dns_delete');
+    }
+
+    public function whois(): void
+    {
+        $this->runAction('whois');
+    }
+
+    public function reconcile(): void
+    {
+        $this->ensureAuth();
+        $svc = new DomainService(Auth::user()['id'] ?? null);
+        $result = $svc->reconcile();
+        $this->respond($result, $result['success'] ? 200 : 500);
     }
 }
