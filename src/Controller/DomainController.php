@@ -32,6 +32,14 @@ class DomainController
         return $stmt->fetch();
     }
 
+    private function loadDomain(int $id)
+    {
+        $pdo = Database::connection();
+        $stmt = $pdo->prepare('SELECT * FROM domains WHERE id = ?');
+        $stmt->execute([$id]);
+        return $stmt->fetch();
+    }
+
     private function buildPayload(string $action): array
     {
         $payload = [];
@@ -77,20 +85,45 @@ class DomainController
     {
         $this->ensureAuth();
         $serviceId = (int)Str::normalizeDigits($_POST['service_id'] ?? $_GET['service_id'] ?? '0');
-        if ($serviceId <= 0) {
-            $this->respond(['success' => false, 'message' => 'شناسه سرویس معتبر نیست'], 422);
+        $domainId = (int)Str::normalizeDigits($_POST['domain_id'] ?? $_GET['domain_id'] ?? '0');
+        if ($serviceId <= 0 && $domainId <= 0) {
+            $this->respond(['success' => false, 'message' => 'شناسه دامنه/سرویس معتبر نیست'], 422);
             return;
         }
 
         try {
-            $service = $this->loadService($serviceId);
-            if (!$service) {
-                $this->respond(['success' => false, 'message' => 'سرویس یافت نشد'], 404);
-                return;
-            }
-            if (($service['product_type'] ?? '') !== 'domain') {
-                $this->respond(['success' => false, 'message' => 'این عملیات فقط برای دامنه‌ها فعال است'], 422);
-                return;
+            $service = null;
+            if ($domainId > 0) {
+                $domain = $this->loadDomain($domainId);
+                if (!$domain) {
+                    $this->respond(['success' => false, 'message' => 'دامنه یافت نشد'], 404);
+                    return;
+                }
+                $meta = [
+                    'domain' => $domain['domain_name'] ?? '',
+                    'domain_name' => $domain['domain_name'] ?? '',
+                    'nameservers' => !empty($domain['nameservers_json']) ? (json_decode($domain['nameservers_json'], true) ?: []) : [],
+                    'dns_records' => !empty($domain['dns_records_json']) ? (json_decode($domain['dns_records_json'], true) ?: []) : [],
+                    'whois' => !empty($domain['whois_json']) ? (json_decode($domain['whois_json'], true) ?: []) : [],
+                ];
+
+                $service = [
+                    'id' => $domain['id'],
+                    'customer_id' => $domain['customer_id'],
+                    'product_type' => 'domain',
+                    'meta_json' => json_encode($meta, JSON_UNESCAPED_UNICODE),
+                    'customer_email' => null,
+                ];
+            } else {
+                $service = $this->loadService($serviceId);
+                if (!$service) {
+                    $this->respond(['success' => false, 'message' => 'سرویس یافت نشد'], 404);
+                    return;
+                }
+                if (($service['product_type'] ?? '') !== 'domain') {
+                    $this->respond(['success' => false, 'message' => 'این عملیات فقط برای دامنه‌ها فعال است'], 422);
+                    return;
+                }
             }
 
             $domainService = new DomainService(Auth::user()['id'] ?? null);

@@ -7,10 +7,12 @@
  * @var int $dueTotal
  * @var array $payments
  * @var array $serversMap
- * @var array $domainServices
- * @var array $hostingServices
+ * @var array $domains
+ * @var array $hostingAccounts
  * @var array $unsyncedDomains
- * @var array $serviceLogs
+ * @var array $syncLogs
+ * @var array $auditLogs
+ * @var array $notifications
  * @var string $registrarBalance
  * @var string $resellerBalance
  */
@@ -53,39 +55,41 @@ use App\Core\Str;
             <tr>
                 <th>#</th>
                 <th>دامنه</th>
-                <th>DNS</th>
-                <th>سرور</th>
-                <th>سینک</th>
                 <th>وضعیت</th>
+                <th>انقضا</th>
+                <th>DNS / WHOIS</th>
+                <th>آخرین سینک</th>
                 <th>عملیات</th>
             </tr>
             </thead>
             <tbody>
-            <?php if (empty($domainServices)): ?>
+            <?php if (empty($domains)): ?>
                 <tr><td colspan="7">دامنه‌ای برای این مشتری ثبت نشده است.</td></tr>
             <?php else: ?>
-                <?php foreach ($domainServices as $s): $meta = $s['meta']; $dns = $meta['domain_dns'] ?? []; ?>
+                <?php foreach ($domains as $dom): ?>
                     <tr>
-                        <td><?php echo (int)$s['id']; ?></td>
-                        <td><?php echo htmlspecialchars($meta['domain'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo (int)$dom['id']; ?></td>
                         <td>
-                            <div class="micro-copy">
-                                <?php echo htmlspecialchars(implode(' | ', array_filter($dns)), ENT_QUOTES, 'UTF-8'); ?>
-                            </div>
+                            <div><?php echo htmlspecialchars($dom['domain_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="micro-copy">قفل: <?php echo htmlspecialchars($dom['lock_status'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></div>
+                        </td>
+                        <td><?php echo htmlspecialchars($dom['status'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($dom['expires_at'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td style="max-width:260px;">
+                            <div class="micro-copy">NS: <?php echo htmlspecialchars(implode(' | ', $dom['nameservers'] ?? []), ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="micro-copy">DNS رکوردها: <?php echo htmlspecialchars((string)count($dom['dns_records'] ?? []), ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="micro-copy">WHOIS: <?php echo htmlspecialchars($dom['whois']['registrant'] ?? ($dom['whois']['registrar'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></div>
                         </td>
                         <td>
-                            <?php $srvId = (int)($meta['panel']['server_id'] ?? 0); ?>
-                            <?php echo $srvId ? htmlspecialchars($serversMap[$srvId]['name'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8') : '—'; ?>
+                            <div><?php echo htmlspecialchars($dom['last_sync_at'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="micro-copy"><?php echo htmlspecialchars($dom['remote_id'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
                         </td>
-                        <td>
-                            <div><?php echo htmlspecialchars($meta['domain_sync_status'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></div>
-                            <div class="micro-copy"><?php echo htmlspecialchars($meta['domain_sync_at'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
-                        </td>
-                        <td><?php echo htmlspecialchars($s['status'], ENT_QUOTES, 'UTF-8'); ?></td>
-                        <td style="display:flex;gap:6px;">
-                            <button class="btn btn-outline" onclick="handleDomainAction(<?php echo (int)$s['id']; ?>,'sync')">سینک</button>
-                            <button class="btn btn-outline btn-danger" onclick="handleDomainAction(<?php echo (int)$s['id']; ?>,'suspend')">ساسپند</button>
-                            <button class="btn btn-outline" onclick="handleDomainAction(<?php echo (int)$s['id']; ?>,'renew')">تمدید</button>
+                        <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                            <button class="btn btn-outline" onclick="handleDomainAction(<?php echo (int)$dom['id']; ?>,'sync')">سینک</button>
+                            <button class="btn btn-outline" onclick="handleDomainAction(<?php echo (int)$dom['id']; ?>,'suspend')">ساسپند</button>
+                            <button class="btn btn-outline" onclick="handleDomainAction(<?php echo (int)$dom['id']; ?>,'unsuspend')">آن‌ساسپند</button>
+                            <button class="btn btn-outline" onclick="handleDomainAction(<?php echo (int)$dom['id']; ?>,'renew')">تمدید</button>
+                            <button class="btn btn-outline" onclick="handleDomainAction(<?php echo (int)$dom['id']; ?>,'whois')">WHOIS</button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -104,41 +108,45 @@ use App\Core\Str;
             <thead>
             <tr>
                 <th>#</th>
-                <th>محصول</th>
-                <th>دامنه</th>
+                <th>دامنه اصلی</th>
                 <th>سرور</th>
-                <th>DirectAdmin</th>
-                <th>سینک</th>
+                <th>کاربر</th>
+                <th>مصرف</th>
+                <th>آخرین سینک</th>
                 <th>وضعیت</th>
                 <th>عملیات</th>
             </tr>
             </thead>
             <tbody>
-            <?php if (empty($hostingServices)): ?>
+            <?php if (empty($hostingAccounts)): ?>
                 <tr><td colspan="8">هاست فعالی ثبت نشده است.</td></tr>
             <?php else: ?>
-                <?php foreach ($hostingServices as $s): $meta = $s['meta']; $panel = $meta['panel'] ?? []; ?>
+                <?php foreach ($hostingAccounts as $acc): ?>
                     <tr>
-                        <td><?php echo (int)$s['id']; ?></td>
-                        <td><?php echo htmlspecialchars($s['product_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
-                        <td><?php echo htmlspecialchars($meta['domain'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo (int)$acc['id']; ?></td>
                         <td>
-                            <?php $srvId = (int)($panel['server_id'] ?? 0); ?>
-                            <?php echo $srvId ? htmlspecialchars($serversMap[$srvId]['name'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8') : '—'; ?>
+                            <div><?php echo htmlspecialchars($acc['primary_domain'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="micro-copy">پکیج: <?php echo htmlspecialchars($acc['package_name'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></div>
+                        </td>
+                        <td><?php echo htmlspecialchars($acc['server_name'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td>
+                            <div class="micro-copy">کاربر: <?php echo htmlspecialchars($acc['da_username'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="micro-copy">سرور: <?php echo htmlspecialchars($acc['hostname'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
                         </td>
                         <td>
-                            <div class="micro-copy">کاربر: <?php echo htmlspecialchars($panel['directadmin_username'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></div>
-                            <div class="micro-copy">پورت: <?php echo htmlspecialchars((string)($panel['port'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="micro-copy">دیسک: <?php echo number_format((int)$acc['usage_disk_mb']); ?> MB</div>
+                            <div class="micro-copy">ترافیک: <?php echo number_format((int)$acc['usage_bw_mb']); ?> MB</div>
                         </td>
                         <td>
-                            <div><?php echo htmlspecialchars($panel['sync_status'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></div>
-                            <div class="micro-copy"><?php echo htmlspecialchars($panel['sync_at'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div><?php echo htmlspecialchars($acc['last_sync_at'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="micro-copy"><?php echo htmlspecialchars($acc['remote_id'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
                         </td>
-                        <td><?php echo htmlspecialchars($s['status'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($acc['status'] ?? 'pending', ENT_QUOTES, 'UTF-8'); ?></td>
                         <td style="display:flex;gap:6px;flex-wrap:wrap;">
-                            <button class="btn btn-outline" onclick="handleDaAction(<?php echo (int)$s['id']; ?>,'sync')">سینک</button>
-                            <button class="btn btn-outline btn-danger" onclick="handleDaAction(<?php echo (int)$s['id']; ?>,'suspend')">ساسپند</button>
-                            <button class="btn btn-outline" onclick="handleDaAction(<?php echo (int)$s['id']; ?>,'unsuspend')">آن‌ساسپند</button>
+                            <button class="btn btn-outline" onclick="handleHostingAction(<?php echo (int)$acc['id']; ?>,'sync')">سینک</button>
+                            <button class="btn btn-outline btn-danger" onclick="handleHostingAction(<?php echo (int)$acc['id']; ?>,'suspend')">ساسپند</button>
+                            <button class="btn btn-outline" onclick="handleHostingAction(<?php echo (int)$acc['id']; ?>,'unsuspend')">آن‌ساسپند</button>
+                            <button class="btn btn-outline" onclick="handleHostingAction(<?php echo (int)$acc['id']; ?>,'reconcile')">آشتی</button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -166,12 +174,14 @@ use App\Core\Str;
             <?php if (empty($unsyncedDomains)): ?>
                 <tr><td colspan="4">همه دامنه‌ها سینک هستند.</td></tr>
             <?php else: ?>
-                <?php foreach ($unsyncedDomains as $s): $meta = $s['meta']; ?>
+                <?php foreach ($unsyncedDomains as $s): ?>
                     <tr>
                         <td><?php echo (int)$s['id']; ?></td>
-                        <td><?php echo htmlspecialchars($meta['domain'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
-                        <td><?php echo htmlspecialchars($meta['domain_sync_status'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8'); ?></td>
-                        <td class="micro-copy" style="white-space:normal;max-width:240px;"><?php echo htmlspecialchars($meta['domain_sync_message'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($s['domain_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($s['status'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td class="micro-copy" style="white-space:normal;max-width:240px;">
+                            <?php echo htmlspecialchars($s['meta_json'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -254,40 +264,102 @@ use App\Core\Str;
 
 <div class="card-soft" style="margin-top:10px;">
     <div class="card-header">
-        <div class="card-title">لاگ‌ها / اعتبار رجیسترار</div>
+        <div class="card-title">اعتبار / اعلان‌ها</div>
     </div>
     <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
         <div>
             <div class="chip" style="display:inline-block;margin-bottom:6px;">اعتبار رجیسترار: <?php echo htmlspecialchars($registrarBalance, ENT_QUOTES, 'UTF-8'); ?></div>
             <div class="chip" style="display:inline-block;margin-bottom:6px;">اعتبار ریسلر: <?php echo htmlspecialchars($resellerBalance, ENT_QUOTES, 'UTF-8'); ?></div>
+            <div style="margin-top:8px;overflow-x:auto;">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>نوع</th>
+                        <th>عنوان</th>
+                        <th>تاریخ</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (empty($notifications)): ?>
+                        <tr><td colspan="4">اعلانی ثبت نشده است.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($notifications as $note): ?>
+                            <tr>
+                                <td><?php echo (int)$note['id']; ?></td>
+                                <td><?php echo htmlspecialchars($note['type'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td class="micro-copy" style="white-space:normal;max-width:240px;">
+                                    <?php echo htmlspecialchars($note['title'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                                </td>
+                                <td><?php echo htmlspecialchars($note['created_at'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div style="overflow-x:auto;">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>#</th>
-                    <th>سرویس</th>
-                    <th>عملیات</th>
-                    <th>پیام</th>
-                    <th>تاریخ</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php if (empty($serviceLogs)): ?>
-                    <tr><td colspan="5">لاگی ثبت نشده است.</td></tr>
-                <?php else: ?>
-                    <?php foreach ($serviceLogs as $log): ?>
-                        <tr>
-                            <td><?php echo (int)$log['id']; ?></td>
-                            <td><?php echo htmlspecialchars($log['product_name'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td><?php echo htmlspecialchars($log['action'], ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td class="micro-copy" style="white-space:normal;max-width:220px;"><?php echo htmlspecialchars($log['message'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td><?php echo htmlspecialchars($log['created_at'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-                </tbody>
-            </table>
+        <div class="grid" style="grid-template-rows:auto auto;gap:10px;">
+            <div style="overflow-x:auto;">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>نوع</th>
+                        <th>عملیات</th>
+                        <th>موفق</th>
+                        <th>پیام</th>
+                        <th>تاریخ</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (empty($syncLogs)): ?>
+                        <tr><td colspan="6">لاگ سینک ثبت نشده است.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($syncLogs as $log): ?>
+                            <tr>
+                                <td><?php echo (int)$log['id']; ?></td>
+                                <td><?php echo htmlspecialchars($log['type'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo htmlspecialchars($log['action'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo !empty($log['success']) ? '✅' : '❌'; ?></td>
+                                <td class="micro-copy" style="white-space:normal;max-width:220px;"><?php echo htmlspecialchars($log['message'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo htmlspecialchars($log['created_at'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>نوع</th>
+                        <th>عملیات</th>
+                        <th>موفق</th>
+                        <th>پیام</th>
+                        <th>تاریخ</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (empty($auditLogs)): ?>
+                        <tr><td colspan="6">لاگ ممیزی ثبت نشده است.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($auditLogs as $log): ?>
+                            <tr>
+                                <td><?php echo (int)$log['id']; ?></td>
+                                <td><?php echo htmlspecialchars($log['entity_type'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo htmlspecialchars($log['action'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo !empty($log['success']) ? '✅' : '❌'; ?></td>
+                                <td class="micro-copy" style="white-space:normal;max-width:220px;"><?php echo htmlspecialchars($log['message'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo htmlspecialchars($log['created_at'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -317,13 +389,13 @@ use App\Core\Str;
         }
     }
 
-    function handleDomainAction(serviceId, action) {
+    function handleDomainAction(domainId, action) {
         if (action === 'suspend' && !confirm('دامنه ساسپند شود؟')) return;
-        postAction('/domains/' + action, {service_id: serviceId});
+        postAction('/domains/' + action, {domain_id: domainId});
     }
 
-    function handleDaAction(serviceId, action) {
+    function handleHostingAction(id, action) {
         if (action === 'suspend' && !confirm('سرویس ساسپند شود؟')) return;
-        postAction('/directadmin/accounts/' + action, {service_id: serviceId});
+        postAction('/hosting/' + action, {id});
     }
 </script>

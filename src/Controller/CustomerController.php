@@ -111,7 +111,6 @@ class CustomerController
 
         try {
             $pdo = Database::connection();
-            $services = [];
             $stmt = $pdo->prepare("SELECT * FROM customers WHERE id = ?");
             $stmt->execute([$id]);
             $customer = $stmt->fetch();
@@ -151,56 +150,52 @@ class CustomerController
             $paymentsStmt->execute([$id, $id]);
             $payments = $paymentsStmt->fetchAll();
 
-            $servicesStmt = $pdo->prepare("SELECT s.*, p.name AS product_name, p.type AS product_type"
-                                           . " FROM service_instances s"
-                                           . " LEFT JOIN products p ON p.id = s.product_id"
-                                           . " WHERE s.customer_id = ?"
-                                           . " ORDER BY s.id DESC");
-            $servicesStmt->execute([$id]);
-            $services = $servicesStmt->fetchAll();
-
             $servers = $pdo->query("SELECT id, name, hostname, provider, last_check_message FROM servers")->fetchAll();
             $serversMap = [];
             foreach ($servers as $srv) {
                 $serversMap[$srv['id']] = $srv;
             }
 
-            $domainServices  = [];
-            $hostingServices = [];
-            $unsyncedDomains = [];
-            foreach ($services as $svc) {
-                $meta        = json_decode($svc['meta_json'] ?? '', true) ?: [];
-                $type        = $svc['product_type'] ?: ($meta['product_type'] ?? '');
-                $svc['meta'] = $meta;
-
-                if ($type === 'domain') {
-                    $domainServices[] = $svc;
-                    $syncStatus       = $meta['domain_sync_status'] ?? $meta['panel']['sync_status'] ?? 'pending';
-                    if ($syncStatus !== 'ok') {
-                        $unsyncedDomains[] = $svc;
-                    }
-                } elseif ($type === 'hosting') {
-                    $hostingServices[] = $svc;
-                }
+            $hostingAccountsStmt = $pdo->prepare("SELECT h.*, s.name AS server_name, s.hostname, s.provider"
+                                                  . " FROM hosting_accounts h"
+                                                  . " LEFT JOIN servers s ON s.id = h.server_id"
+                                                  . " WHERE h.customer_id = ?"
+                                                  . " ORDER BY h.id DESC");
+            $hostingAccountsStmt->execute([$id]);
+            $hostingAccounts = $hostingAccountsStmt->fetchAll();
+            foreach ($hostingAccounts as &$ha) {
+                $ha['meta'] = json_decode($ha['meta_json'] ?? '', true) ?: [];
             }
+            unset($ha);
 
-            $serviceIds  = array_column($services, 'id');
-            $serviceLogs = [];
-            if (!empty($serviceIds)) {
-                $placeholders = implode(',', array_fill(0, count($serviceIds), '?'));
-                $logsStmt = $pdo->prepare("SELECT l.*, p.name AS product_name"
-                                         . " FROM directadmin_logs l"
-                                         . " LEFT JOIN service_instances s ON s.id = l.service_id"
-                                         . " LEFT JOIN products p ON p.id = s.product_id"
-                                         . " WHERE l.service_id IN ($placeholders)"
-                                         . " ORDER BY l.id DESC"
-                                         . " LIMIT 30");
-                $logsStmt->execute($serviceIds);
-                $serviceLogs = $logsStmt->fetchAll();
+            $domainsStmt = $pdo->prepare("SELECT * FROM domains WHERE customer_id = ? ORDER BY id DESC");
+            $domainsStmt->execute([$id]);
+            $domains = $domainsStmt->fetchAll();
+            foreach ($domains as &$dom) {
+                $dom['nameservers'] = !empty($dom['nameservers_json']) ? (json_decode($dom['nameservers_json'], true) ?: []) : [];
+                $dom['dns_records'] = !empty($dom['dns_records_json']) ? (json_decode($dom['dns_records_json'], true) ?: []) : [];
+                $dom['whois'] = !empty($dom['whois_json']) ? (json_decode($dom['whois_json'], true) ?: []) : [];
             }
+            unset($dom);
+
+            $unsyncedDomainsStmt = $pdo->prepare("SELECT * FROM domains WHERE customer_id IS NULL ORDER BY id DESC LIMIT 20");
+            $unsyncedDomainsStmt->execute();
+            $unsyncedDomains = $unsyncedDomainsStmt->fetchAll();
 
             $registrarBalance = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'registrar' ORDER BY id DESC LIMIT 1")?->fetchColumn();
             $resellerBalance  = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'reseller' ORDER BY id DESC LIMIT 1")?->fetchColumn();
+
+            $syncLogsStmt = $pdo->prepare("SELECT * FROM sync_logs WHERE customer_id = ? ORDER BY id DESC LIMIT 50");
+            $syncLogsStmt->execute([$id]);
+            $syncLogs = $syncLogsStmt->fetchAll();
+
+            $auditLogsStmt = $pdo->prepare("SELECT * FROM audit_logs WHERE customer_id = ? ORDER BY id DESC LIMIT 50");
+            $auditLogsStmt->execute([$id]);
+            $auditLogs = $auditLogsStmt->fetchAll();
+
+            $notificationsStmt = $pdo->prepare("SELECT * FROM notifications WHERE customer_id = ? ORDER BY id DESC LIMIT 20");
+            $notificationsStmt->execute([$id]);
+            $notifications = $notificationsStmt->fetchAll();
 
         } catch (PDOException $e) {
             View::renderError('خطا در بارگذاری پروفایل مشتری: ' . $e->getMessage(), $e->getTraceAsString(), Auth::user());
@@ -215,12 +210,13 @@ class CustomerController
             'paidTotal'     => $paidTotal,
             'dueTotal'      => $dueTotal,
             'payments'      => $payments,
-            'services'      => $services,
             'serversMap'    => $serversMap ?? [],
-            'domainServices'=> $domainServices,
-            'hostingServices' => $hostingServices,
-            'unsyncedDomains' => $unsyncedDomains,
-            'serviceLogs'     => $serviceLogs,
+            'domains'       => $domains ?? [],
+            'hostingAccounts' => $hostingAccounts ?? [],
+            'unsyncedDomains' => $unsyncedDomains ?? [],
+            'syncLogs'        => $syncLogs ?? [],
+            'auditLogs'       => $auditLogs ?? [],
+            'notifications'   => $notifications ?? [],
             'registrarBalance'=> $registrarBalance ?: '—',
             'resellerBalance' => $resellerBalance ?: '—',
         ]);
