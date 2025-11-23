@@ -419,6 +419,23 @@ CREATE TABLE `service_instances` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `directadmin_logs`
+--
+
+CREATE TABLE `directadmin_logs` (
+  `id` int(11) NOT NULL,
+  `service_id` int(11) NOT NULL,
+  `server_id` int(11) NOT NULL,
+  `action` varchar(50) NOT NULL,
+  `status` enum('success','error') DEFAULT 'success',
+  `message` text DEFAULT NULL,
+  `response` longtext DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `contract_line_items`
 --
 
@@ -576,6 +593,14 @@ ALTER TABLE `service_instances`
   ADD KEY `idx_contract_id` (`contract_id`);
 
 --
+-- Indexes for table `directadmin_logs`
+--
+ALTER TABLE `directadmin_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_dal_service` (`service_id`),
+  ADD KEY `idx_dal_server` (`server_id`);
+
+--
 -- Indexes for table `contract_line_items`
 --
 ALTER TABLE `contract_line_items`
@@ -618,6 +643,12 @@ ALTER TABLE `employees`
 -- AUTO_INCREMENT for table `employee_commission_items`
 --
 ALTER TABLE `employee_commission_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `directadmin_logs`
+--
+ALTER TABLE `directadmin_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --

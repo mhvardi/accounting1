@@ -168,6 +168,22 @@ class Router
                 (new \App\Controller\ServersController())->check();
                 break;
 
+            case '/directadmin/accounts/create':
+                (new \App\Controller\DirectAdminController())->create();
+                break;
+            case '/directadmin/accounts/suspend':
+                (new \App\Controller\DirectAdminController())->suspend();
+                break;
+            case '/directadmin/accounts/unsuspend':
+                (new \App\Controller\DirectAdminController())->unsuspend();
+                break;
+            case '/directadmin/accounts/delete':
+                (new \App\Controller\DirectAdminController())->delete();
+                break;
+            case '/directadmin/accounts/sync':
+                (new \App\Controller\DirectAdminController())->sync();
+                break;
+
             case '/payroll':
                 (new \App\Controller\PayrollController())->index();
                 break;

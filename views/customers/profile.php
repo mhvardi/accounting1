@@ -85,6 +85,8 @@ use App\Core\Str;
                 <th>محصول</th>
                 <th>دامنه/سایت</th>
                 <th>سرور</th>
+                <th>سینک</th>
+                <th>آخرین پیام</th>
                 <th>وضعیت</th>
                 <th>شروع</th>
                 <th>سررسید</th>
@@ -92,7 +94,7 @@ use App\Core\Str;
             </thead>
             <tbody>
             <?php if (empty($services ?? [])): ?>
-                <tr><td colspan="6">سرویسی برای این مشتری ثبت نشده است.</td></tr>
+                <tr><td colspan="8">سرویسی برای این مشتری ثبت نشده است.</td></tr>
             <?php else: ?>
                 <?php foreach ($services as $s): $meta = json_decode($s['meta_json'] ?? '', true) ?: []; ?>
                     <tr>
@@ -102,6 +104,16 @@ use App\Core\Str;
                         <td>
                             <?php $srvId = (int)($meta['panel']['server_id'] ?? 0); ?>
                             <?php echo $srvId ? htmlspecialchars($serversMap[$srvId]['name'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8') : '—'; ?>
+                        </td>
+                        <td>
+                            <?php $panel = $meta['panel'] ?? []; ?>
+                            <div><?php echo htmlspecialchars($panel['sync_status'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="micro-copy"><?php echo htmlspecialchars($panel['sync_at'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+                        </td>
+                        <td>
+                            <div class="micro-copy" style="max-width:180px;white-space:normal;">
+                                <?php echo htmlspecialchars($panel['sync_message'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                            </div>
                         </td>
                         <td><?php echo htmlspecialchars($s['status'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo Date::jDate($s['start_date']); ?></td>
