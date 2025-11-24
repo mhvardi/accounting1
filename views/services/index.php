@@ -73,7 +73,7 @@
                         <td><?php echo $s['contract_id'] ? '#'.$s['contract_id'] : '—'; ?></td>
                         <td>
                             <?php $srvId = (int)($meta['panel']['server_id'] ?? 0); ?>
-                            <?php echo $srvId ? htmlspecialchars($serversMap[$srvId]['name'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8') : '—'; ?>
+                            <?php echo $srvId ? htmlspecialchars($serversMap[$srvId]['hostname'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8') : '—'; ?>
                             <div class="micro-copy" style="direction:ltr;">
                                 <?php echo $srvId ? htmlspecialchars($serversMap[$srvId]['hostname'] ?? '', ENT_QUOTES, 'UTF-8') : ''; ?>
                             </div>
@@ -120,7 +120,7 @@
                                 <select name="server_id" class="form-select" style="width:140px;">
                                     <option value="0">سرور DirectAdmin</option>
                                     <?php foreach ($servers as $srv): ?>
-                                        <option value="<?php echo (int)$srv['id']; ?>" <?php echo ($meta['panel']['server_id'] ?? 0)==$srv['id']?'selected':''; ?>><?php echo htmlspecialchars($srv['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                                        <option value="<?php echo (int)$srv['id']; ?>" <?php echo ($meta['panel']['server_id'] ?? 0)==$srv['id']?'selected':''; ?>><?php echo htmlspecialchars($srv['hostname'], ENT_QUOTES, 'UTF-8'); ?></option>
                                     <?php endforeach; ?>
                                 </select>
                                 <select name="da_action" class="form-select" style="width:140px;">

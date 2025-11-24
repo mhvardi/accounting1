@@ -150,13 +150,13 @@ class CustomerController
             $paymentsStmt->execute([$id, $id]);
             $payments = $paymentsStmt->fetchAll();
 
-            $servers = $pdo->query("SELECT id, name, hostname, provider, last_check_message FROM servers")->fetchAll();
+            $servers = $pdo->query("SELECT id, hostname, ip, last_check_message FROM servers")->fetchAll();
             $serversMap = [];
             foreach ($servers as $srv) {
                 $serversMap[$srv['id']] = $srv;
             }
 
-            $hostingAccountsStmt = $pdo->prepare("SELECT h.*, s.name AS server_name, s.hostname, s.provider"
+            $hostingAccountsStmt = $pdo->prepare("SELECT h.*, s.hostname AS server_name, s.hostname"
                                                   . " FROM hosting_accounts h"
                                                   . " LEFT JOIN servers s ON s.id = h.server_id"
                                                   . " WHERE h.customer_id = ?"
@@ -182,8 +182,8 @@ class CustomerController
             $unsyncedDomainsStmt->execute();
             $unsyncedDomains = $unsyncedDomainsStmt->fetchAll();
 
-            $registrarBalance = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'registrar' ORDER BY id DESC LIMIT 1")?->fetchColumn();
-            $resellerBalance  = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'reseller' ORDER BY id DESC LIMIT 1")?->fetchColumn();
+            $registrarBalance = '';
+            $resellerBalance  = '';
 
             $syncLogsStmt = $pdo->prepare("SELECT * FROM sync_logs WHERE customer_id = ? ORDER BY id DESC LIMIT 50");
             $syncLogsStmt->execute([$id]);

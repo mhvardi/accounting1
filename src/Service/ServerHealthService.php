@@ -27,8 +27,17 @@ class ServerHealthService
             CURLOPT_SSL_VERIFYHOST => false,
         ]);
 
-        if (!empty($server['username']) && !empty($server['password'])) {
-            curl_setopt($ch, CURLOPT_USERPWD, $server['username'] . ':' . $server['password']);
+        if (!empty($server['username'])) {
+            $credential = null;
+            if (!empty($server['login_key'])) {
+                $credential = $server['username'] . ':' . $server['login_key'];
+            } elseif (!empty($server['password'])) {
+                $credential = $server['username'] . ':' . $server['password'];
+            }
+
+            if ($credential !== null) {
+                curl_setopt($ch, CURLOPT_USERPWD, $credential);
+            }
         }
 
         $output = curl_exec($ch);
