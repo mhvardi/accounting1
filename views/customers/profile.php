@@ -9,7 +9,6 @@
  * @var array $serversMap
  * @var array $domains
  * @var array $hostingAccounts
- * @var array $unsyncedDomains
  * @var array $syncLogs
  * @var array $auditLogs
  * @var array $notifications
@@ -147,6 +146,9 @@ use App\Core\Str;
 </div>
 
 <div class="tab-panel" id="tab-services" style="display:none;">
+    <div style="margin-bottom:10px;display:flex;justify-content:flex-end;">
+        <a class="btn btn-outline" href="/domains">دامنه‌های سینک‌نشده</a>
+    </div>
     <div class="card-soft">
         <div class="card-header">
             <div class="card-title">دامنه‌ها</div>
@@ -249,40 +251,6 @@ use App\Core\Str;
                                 <button class="btn btn-outline btn-danger" onclick="handleHostingAction(<?php echo (int)$acc['id']; ?>,'suspend')">ساسپند</button>
                                 <button class="btn btn-outline" onclick="handleHostingAction(<?php echo (int)$acc['id']; ?>,'unsuspend')">آن‌ساسپند</button>
                                 <button class="btn btn-outline" onclick="handleHostingAction(<?php echo (int)$acc['id']; ?>,'reconcile')">آشتی</button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card-soft" style="margin-top:10px;">
-        <div class="card-header">
-            <div class="card-title">دامنه‌های سینک‌نشده</div>
-        </div>
-        <div style="overflow-x:auto;">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>#</th>
-                    <th>دامنه</th>
-                    <th>وضعیت</th>
-                    <th>آخرین پیام</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php if (empty($unsyncedDomains)): ?>
-                    <tr><td colspan="4">همه دامنه‌ها سینک هستند.</td></tr>
-                <?php else: ?>
-                    <?php foreach ($unsyncedDomains as $s): ?>
-                        <tr>
-                            <td><?php echo (int)$s['id']; ?></td>
-                            <td><?php echo htmlspecialchars($s['domain_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td><?php echo htmlspecialchars($s['status'] ?? 'نامشخص', ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td class="micro-copy" style="white-space:normal;max-width:240px;">
-                                <?php echo htmlspecialchars($s['meta_json'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
