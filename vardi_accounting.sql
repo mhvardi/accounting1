@@ -798,11 +798,72 @@ CREATE TABLE IF NOT EXISTS `sync_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
+-- Table structure for leads
+CREATE TABLE IF NOT EXISTS `leads` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(190) NOT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `email` varchar(190) DEFAULT NULL,
+  `status` enum('new','contacted','qualified','proposal','won','lost','converted') NOT NULL DEFAULT 'new',
+  `owner_employee_id` int(11) DEFAULT NULL,
+  `source` varchar(190) DEFAULT NULL,
+  `template_key` varchar(50) DEFAULT 'default',
+  `note` text DEFAULT NULL,
+  `converted_customer_id` int(10) UNSIGNED DEFAULT NULL,
+  `converted_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `owner_employee_id` (`owner_employee_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+-- Table structure for lead_checklists
+CREATE TABLE IF NOT EXISTS `lead_checklists` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `lead_id` int(11) NOT NULL,
+  `template_key` varchar(50) NOT NULL,
+  `title` varchar(190) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `lead_id` (`lead_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- Table structure for lead_checklist_items
+CREATE TABLE IF NOT EXISTS `lead_checklist_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `checklist_id` int(11) NOT NULL,
+  `title` varchar(190) NOT NULL,
+  `status` enum('pending','done') NOT NULL DEFAULT 'pending',
+  `due_date` date DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `checklist_id` (`checklist_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- Table structure for lead_notes
+CREATE TABLE IF NOT EXISTS `lead_notes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `lead_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `body` text NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `lead_id` (`lead_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
 -- Table structure for audit_logs
 CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `actor_user_id` int(11) DEFAULT NULL,
   `customer_id` int(11) DEFAULT NULL,
+  `lead_id` int(11) DEFAULT NULL,
   `entity_type` varchar(50) NOT NULL,
   `entity_id` int(11) DEFAULT NULL,
   `action` varchar(100) NOT NULL,
@@ -814,7 +875,8 @@ CREATE TABLE IF NOT EXISTS `audit_logs` (
   `message` varchar(255) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `customer_id` (`customer_id`)
+  KEY `customer_id` (`customer_id`),
+  KEY `lead_id` (`lead_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------

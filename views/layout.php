@@ -69,6 +69,11 @@ function nav_active(string $path, string $current): string {
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="/leads" class="nav-link <?php echo nav_active('/leads', $currentPath); ?>">
+                            <span class="icon">🧲</span><span class="text">لیدها</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="/hosting" class="nav-link <?php echo nav_active('/hosting', $currentPath); ?>">
                             <span class="icon">🗄️</span><span class="text">هاستینگ</span>
                         </a>
