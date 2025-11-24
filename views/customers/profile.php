@@ -13,6 +13,7 @@
  * @var array $syncLogs
  * @var array $auditLogs
  * @var array $notifications
+ * @var array $smsLogs
  * @var string $registrarBalance
  * @var string $resellerBalance
  */
@@ -300,6 +301,38 @@ use App\Core\Str;
             </div>
         </div>
         <div class="grid" style="grid-template-rows:auto auto;gap:10px;">
+            <div style="overflow-x:auto;">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>جهت</th>
+                        <th>نوع</th>
+                        <th>وضعیت</th>
+                        <th>متن</th>
+                        <th>زمان</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (empty($smsLogs)): ?>
+                        <tr><td colspan="6">پیامکی ثبت نشده است.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($smsLogs as $sms): ?>
+                            <tr>
+                                <td><?php echo (int)$sms['id']; ?></td>
+                                <td><?php echo htmlspecialchars($sms['direction'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo htmlspecialchars($sms['sms_type'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo htmlspecialchars($sms['status'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td class="micro-copy" style="white-space:normal;max-width:240px;">
+                                    <?php echo htmlspecialchars(mb_substr($sms['message'] ?? '', 0, 120), ENT_QUOTES, 'UTF-8'); ?>
+                                </td>
+                                <td><?php echo htmlspecialchars($sms['created_at'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
             <div style="overflow-x:auto;">
                 <table class="table">
                     <thead>
