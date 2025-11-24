@@ -197,6 +197,10 @@ class CustomerController
             $notificationsStmt->execute([$id]);
             $notifications = $notificationsStmt->fetchAll();
 
+            $smsLogsStmt = $pdo->prepare("SELECT * FROM sms_logs WHERE customer_id = ? ORDER BY id DESC LIMIT 30");
+            $smsLogsStmt->execute([$id]);
+            $smsLogs = $smsLogsStmt->fetchAll();
+
         } catch (PDOException $e) {
             View::renderError('خطا در بارگذاری پروفایل مشتری: ' . $e->getMessage(), $e->getTraceAsString(), Auth::user());
             return;
@@ -217,6 +221,7 @@ class CustomerController
             'syncLogs'        => $syncLogs ?? [],
             'auditLogs'       => $auditLogs ?? [],
             'notifications'   => $notifications ?? [],
+            'smsLogs'         => $smsLogs ?? [],
             'registrarBalance'=> $registrarBalance ?: '—',
             'resellerBalance' => $resellerBalance ?: '—',
         ]);

@@ -781,6 +781,24 @@ CREATE TABLE IF NOT EXISTS `domains` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
+-- Table structure for sms_logs
+CREATE TABLE IF NOT EXISTS `sms_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `direction` enum('outbound','inbound') NOT NULL,
+  `sms_type` varchar(50) NOT NULL,
+  `customer_id` int(11) DEFAULT NULL,
+  `phone` varchar(30) DEFAULT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `message` text,
+  `status` varchar(50) DEFAULT NULL,
+  `provider_message_id` varchar(100) DEFAULT NULL,
+  `meta_json` json DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `customer_id` (`customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
 -- Table structure for sync_logs
 CREATE TABLE IF NOT EXISTS `sync_logs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

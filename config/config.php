@@ -11,4 +11,6 @@ return array (
   'timezone' => 'Asia/Tehran',
   'domain_reseller_url' => 'https://reseller.local/api',
   'domain_reseller_api_key' => null,
+  'sms_api_key' => null,
+  'sms_api_base' => 'https://api.limosms.com',
 );

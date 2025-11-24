@@ -278,6 +278,40 @@ class Router
                 (new \App\Controller\MiscSitesController())->index();
                 break;
 
+            case '/sms':
+                (new \App\Controller\SmsController())->index();
+                break;
+            case '/sms/send':
+                (new \App\Controller\SmsController())->send();
+                break;
+            case '/sms/bulk':
+                (new \App\Controller\SmsController())->sendBulk();
+                break;
+            case '/sms/correlated':
+                (new \App\Controller\SmsController())->sendCorrelated();
+                break;
+            case '/sms/pattern':
+                (new \App\Controller\SmsController())->sendPattern();
+                break;
+            case '/sms/voice':
+                (new \App\Controller\SmsController())->sendVoice();
+                break;
+            case '/sms/invoice-reminder':
+                (new \App\Controller\SmsController())->invoiceReminder();
+                break;
+            case '/sms/welcome-trigger':
+                (new \App\Controller\SmsController())->welcomeTrigger();
+                break;
+            case '/sms/fetch-inbound':
+                (new \App\Controller\SmsController())->fetchInbound();
+                break;
+            case '/sms/status':
+                (new \App\Controller\SmsController())->checkStatus();
+                break;
+            case '/sms/cancel':
+                (new \App\Controller\SmsController())->cancelScheduled();
+                break;
+
             case '/json/directadmin/reseller-config.json':
                 (new \App\Controller\JsonController())->directAdminConfig();
                 break;

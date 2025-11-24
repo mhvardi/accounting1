@@ -99,6 +99,11 @@ function nav_active(string $path, string $current): string {
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="/sms" class="nav-link <?php echo nav_active('/sms', $currentPath); ?>">
+                            <span class="icon">📲</span><span class="text">پیامک</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="/categories" class="nav-link <?php echo nav_active('/categories', $currentPath); ?>">
                             <span class="icon">📂</span><span class="text">دسته‌بندی خدمات</span>
                         </a>
