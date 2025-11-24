@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Core\Auth;
 use App\Core\Database;
+use App\Core\View;
 use App\Core\Str;
 use App\Service\DomainService;
 use PDOException;
@@ -14,6 +15,27 @@ class DomainController
         if (!Auth::check()) {
             header('Location: /login');
             exit;
+        }
+    }
+
+    public function index(): void
+    {
+        $this->ensureAuth();
+        try {
+            $pdo = Database::connection();
+            $stmt = $pdo->query("SELECT * FROM domains WHERE customer_id IS NULL ORDER BY id DESC LIMIT 100");
+            $unsyncedDomains = $stmt->fetchAll();
+
+            View::render('domains/index', [
+                'user' => Auth::user(),
+                'unsyncedDomains' => $unsyncedDomains,
+            ]);
+        } catch (PDOException $e) {
+            View::renderError(
+                'خطا در بارگذاری دامنه‌های سینک‌نشده: ' . $e->getMessage(),
+                $e->getTraceAsString(),
+                Auth::user()
+            );
         }
     }
 

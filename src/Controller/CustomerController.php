@@ -119,7 +119,7 @@ class CustomerController
                 return;
             }
 
-            $contractsStmt = $pdo->prepare("SELECT c.*, e.full_name AS employee_name, cat.name AS category_name
+            $contractsStmt = $pdo->prepare("SELECT c.*, COALESCE(e.full_name, 'مدیریت') AS employee_name, cat.name AS category_name
                                             FROM contracts c
                                             LEFT JOIN employees e ON e.id = c.sales_employee_id
                                             LEFT JOIN product_categories cat ON cat.id = c.category_id
@@ -150,13 +150,13 @@ class CustomerController
             $paymentsStmt->execute([$id, $id]);
             $payments = $paymentsStmt->fetchAll();
 
-            $servers = $pdo->query("SELECT id, name, hostname, provider, last_check_message FROM servers")->fetchAll();
+            $servers = $pdo->query("SELECT id, hostname, ip, last_check_message FROM servers")->fetchAll();
             $serversMap = [];
             foreach ($servers as $srv) {
                 $serversMap[$srv['id']] = $srv;
             }
 
-            $hostingAccountsStmt = $pdo->prepare("SELECT h.*, s.name AS server_name, s.hostname, s.provider"
+            $hostingAccountsStmt = $pdo->prepare("SELECT h.*, s.hostname AS server_name, s.hostname"
                                                   . " FROM hosting_accounts h"
                                                   . " LEFT JOIN servers s ON s.id = h.server_id"
                                                   . " WHERE h.customer_id = ?"
@@ -178,6 +178,8 @@ class CustomerController
             }
             unset($dom);
 
+            $registrarBalance = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'registrar' ORDER BY id DESC LIMIT 1")?->fetchColumn();
+            $resellerBalance  = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'reseller' ORDER BY id DESC LIMIT 1")?->fetchColumn();
             $unsyncedDomainsStmt = $pdo->prepare("SELECT * FROM domains WHERE customer_id IS NULL ORDER BY id DESC LIMIT 20");
             $unsyncedDomainsStmt->execute();
             $unsyncedDomains = $unsyncedDomainsStmt->fetchAll();
@@ -192,6 +194,8 @@ class CustomerController
                 $registrarBalance = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'registrar' ORDER BY id DESC LIMIT 1")?->fetchColumn();
                 $resellerBalance  = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'reseller' ORDER BY id DESC LIMIT 1")?->fetchColumn();
             }
+            $registrarBalance = '';
+            $resellerBalance  = '';
 
             $syncLogsStmt = $pdo->prepare("SELECT * FROM sync_logs WHERE customer_id = ? ORDER BY id DESC LIMIT 50");
             $syncLogsStmt->execute([$id]);
@@ -227,7 +231,6 @@ class CustomerController
             'serversMap'    => $serversMap ?? [],
             'domains'       => $domains ?? [],
             'hostingAccounts' => $hostingAccounts ?? [],
-            'unsyncedDomains' => $unsyncedDomains ?? [],
             'syncLogs'        => $syncLogs ?? [],
             'auditLogs'       => $auditLogs ?? [],
             'notifications'   => $notifications ?? [],
@@ -240,27 +243,14 @@ class CustomerController
         ]);
     }
 
-    public function walletTopUp(): void
-    {
-        $this->handleWalletAdjustment('credit', 'manual_topup');
-    }
-
-    public function walletCharge(): void
-    {
-        $this->handleWalletAdjustment('debit', 'charge');
-    }
-
-    public function walletRefund(): void
-    {
-        $this->handleWalletAdjustment('credit', 'refund');
-    }
-
-    protected function handleWalletAdjustment(string $direction, string $referenceType): void
+    public function walletAdjust(): void
     {
         $this->ensureAuth();
+
         $customerId = (int)($_POST['customer_id'] ?? 0);
         $amount     = (int)Str::normalizeDigits($_POST['amount'] ?? '0');
         $note       = trim($_POST['description'] ?? '');
+        $direction  = ($_POST['direction'] ?? 'credit') === 'debit' ? 'debit' : 'credit';
 
         if ($customerId <= 0 || $amount <= 0) {
             $this->jsonResponse(false, 'مبلغ یا شناسه مشتری نامعتبر است.');
@@ -271,7 +261,7 @@ class CustomerController
             $pdo = Database::connection();
             $pdo->beginTransaction();
             $wallet = $this->getOrCreateWalletAccount($pdo, $customerId);
-            $this->recordWalletTransaction($pdo, $wallet['id'], $direction, $amount, $note, $referenceType, null);
+            $this->recordWalletTransaction($pdo, $wallet['id'], $direction, $amount, $note, 'manual', null);
             $balance = $this->refreshWalletBalance($pdo, $wallet['id']);
             $pdo->commit();
         } catch (PDOException $e) {

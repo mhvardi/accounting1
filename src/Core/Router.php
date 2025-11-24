@@ -76,14 +76,8 @@ class Router
             case '/customers/profile':
                 (new \App\Controller\CustomerController())->profile();
                 break;
-            case '/customers/wallet/topup':
-                (new \App\Controller\CustomerController())->walletTopUp();
-                break;
-            case '/customers/wallet/charge':
-                (new \App\Controller\CustomerController())->walletCharge();
-                break;
-            case '/customers/wallet/refund':
-                (new \App\Controller\CustomerController())->walletRefund();
+            case '/customers/wallet/adjust':
+                (new \App\Controller\CustomerController())->walletAdjust();
                 break;
 
             case '/leads':
@@ -198,6 +192,9 @@ class Router
             case '/servers/delete':
                 (new \App\Controller\ServersController())->delete();
                 break;
+            case '/servers/test':
+                (new \App\Controller\ServersController())->test();
+                break;
             case '/servers/check':
                 (new \App\Controller\ServersController())->check();
                 break;
@@ -236,6 +233,10 @@ class Router
 
             case '/domains/sync':
                 (new \App\Controller\DomainController())->sync();
+                break;
+            case '/domains':
+            case '/domains/unsynced':
+                (new \App\Controller\DomainController())->index();
                 break;
             case '/domains/register':
                 (new \App\Controller\DomainController())->register();
