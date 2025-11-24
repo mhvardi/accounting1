@@ -182,8 +182,16 @@ class CustomerController
             $unsyncedDomainsStmt->execute();
             $unsyncedDomains = $unsyncedDomainsStmt->fetchAll();
 
-            $registrarBalance = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'registrar' ORDER BY id DESC LIMIT 1")?->fetchColumn();
-            $resellerBalance  = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'reseller' ORDER BY id DESC LIMIT 1")?->fetchColumn();
+            $config = require __DIR__ . '/../../config/config.php';
+            $showRegistrarResellerBalances = !empty($config['show_registrar_reseller_balances']);
+
+            $registrarBalance = null;
+            $resellerBalance  = null;
+
+            if ($showRegistrarResellerBalances) {
+                $registrarBalance = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'registrar' ORDER BY id DESC LIMIT 1")?->fetchColumn();
+                $resellerBalance  = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'reseller' ORDER BY id DESC LIMIT 1")?->fetchColumn();
+            }
 
             $syncLogsStmt = $pdo->prepare("SELECT * FROM sync_logs WHERE customer_id = ? ORDER BY id DESC LIMIT 50");
             $syncLogsStmt->execute([$id]);
@@ -224,6 +232,7 @@ class CustomerController
             'auditLogs'       => $auditLogs ?? [],
             'notifications'   => $notifications ?? [],
             'smsLogs'         => $smsLogs ?? [],
+            'showRegistrarResellerBalances' => $showRegistrarResellerBalances,
             'registrarBalance'=> $registrarBalance ?: '—',
             'resellerBalance' => $resellerBalance ?: '—',
             'walletAccount'   => $walletAccount,
