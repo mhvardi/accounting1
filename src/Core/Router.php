@@ -234,6 +234,10 @@ class Router
             case '/domains/sync':
                 (new \App\Controller\DomainController())->sync();
                 break;
+            case '/domains':
+            case '/domains/unsynced':
+                (new \App\Controller\DomainController())->index();
+                break;
             case '/domains/register':
                 (new \App\Controller\DomainController())->register();
                 break;

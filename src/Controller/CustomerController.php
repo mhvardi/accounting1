@@ -178,6 +178,8 @@ class CustomerController
             }
             unset($dom);
 
+            $registrarBalance = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'registrar' ORDER BY id DESC LIMIT 1")?->fetchColumn();
+            $resellerBalance  = $pdo->query("SELECT last_check_message FROM servers WHERE provider = 'reseller' ORDER BY id DESC LIMIT 1")?->fetchColumn();
             $unsyncedDomainsStmt = $pdo->prepare("SELECT * FROM domains WHERE customer_id IS NULL ORDER BY id DESC LIMIT 20");
             $unsyncedDomainsStmt->execute();
             $unsyncedDomains = $unsyncedDomainsStmt->fetchAll();
@@ -219,7 +221,6 @@ class CustomerController
             'serversMap'    => $serversMap ?? [],
             'domains'       => $domains ?? [],
             'hostingAccounts' => $hostingAccounts ?? [],
-            'unsyncedDomains' => $unsyncedDomains ?? [],
             'syncLogs'        => $syncLogs ?? [],
             'auditLogs'       => $auditLogs ?? [],
             'notifications'   => $notifications ?? [],
