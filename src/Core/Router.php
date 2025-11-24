@@ -77,6 +77,31 @@ class Router
                 (new \App\Controller\CustomerController())->profile();
                 break;
 
+            case '/leads':
+                (new \App\Controller\LeadController())->index();
+                break;
+            case '/leads/show':
+                (new \App\Controller\LeadController())->show();
+                break;
+            case '/leads/create':
+                (new \App\Controller\LeadController())->create();
+                break;
+            case '/leads/assign':
+                (new \App\Controller\LeadController())->assign();
+                break;
+            case '/leads/update-status':
+                (new \App\Controller\LeadController())->updateStatus();
+                break;
+            case '/leads/notes/add':
+                (new \App\Controller\LeadController())->addNote();
+                break;
+            case '/leads/checklist/toggle':
+                (new \App\Controller\LeadController())->toggleChecklistItem();
+                break;
+            case '/leads/convert':
+                (new \App\Controller\LeadController())->convert();
+                break;
+
             case '/contracts':
                 (new \App\Controller\ContractsController())->index();
                 break;
