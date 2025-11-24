@@ -171,109 +171,97 @@ class ServersController
         return strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest';
     }
 
-    private function store($pdo): array
+    private function normalizeServerInput(): array
     {
-        $id = (int)Str::normalizeDigits($_POST['id'] ?? '0');
-        $data = [
-            'name'         => trim($_POST['name'] ?? ''),
-            'hostname'     => trim($_POST['hostname'] ?? ''),
-            'ip'           => trim($_POST['ip'] ?? ''),
-            'allocated_ips'=> trim($_POST['allocated_ips'] ?? ''),
-            'monthly_cost' => (float)($_POST['monthly_cost'] ?? 0),
-            'datacenter'   => trim($_POST['datacenter'] ?? ''),
-            'account_limit'=> (int)Str::normalizeDigits($_POST['account_limit'] ?? '0'),
-            'status_url'   => trim($_POST['status_url'] ?? ''),
-            'disabled'     => isset($_POST['disabled']) ? 1 : 0,
-            'ns1'          => trim($_POST['ns1'] ?? ''),
-            'ns1_ip'       => trim($_POST['ns1_ip'] ?? ''),
-            'ns2'          => trim($_POST['ns2'] ?? ''),
-            'ns2_ip'       => trim($_POST['ns2_ip'] ?? ''),
-            'ns3'          => trim($_POST['ns3'] ?? ''),
-            'ns3_ip'       => trim($_POST['ns3_ip'] ?? ''),
-            'ns4'          => trim($_POST['ns4'] ?? ''),
-            'ns4_ip'       => trim($_POST['ns4_ip'] ?? ''),
-            'ns5'          => trim($_POST['ns5'] ?? ''),
-            'ns5_ip'       => trim($_POST['ns5_ip'] ?? ''),
-            'module'       => strtolower(trim($_POST['module'] ?? 'directadmin')),
-            'username'     => trim($_POST['username'] ?? ''),
-            'password'     => trim($_POST['password'] ?? ''),
-            'ssl'          => isset($_POST['ssl']) ? 1 : 0,
-            'port'         => (int)Str::normalizeDigits($_POST['port'] ?? '2222'),
-        ];
+        $password = trim($_POST['password'] ?? '');
+        $loginKey = trim($_POST['login_key'] ?? '');
 
-        if ($data['name'] === '' || $data['hostname'] === '' || $data['ip'] === '' || $data['username'] === '' || $data['password'] === '') {
-            return [false, 'تمام فیلدهای اصلی الزامی هستند'];
+        return [
+            'id' => (int)Str::normalizeDigits($_POST['id'] ?? '0'),
+            'hostname' => trim($_POST['hostname'] ?? ''),
+            'ip' => trim($_POST['ip'] ?? ''),
+            'username' => trim($_POST['username'] ?? ''),
+            'password' => $password === '' ? null : $password,
+            'login_key' => $loginKey === '' ? null : $loginKey,
+            'ssl' => isset($_POST['ssl']) ? 1 : 0,
+            'port' => (int)Str::normalizeDigits($_POST['port'] ?? '2222'),
+        ];
+    }
+
+    private function validateServerInput(array $data): ?string
+    {
+        if ($data['hostname'] === '' || $data['ip'] === '' || $data['username'] === '') {
+            return 'hostname، IP و نام کاربری الزامی هستند';
         }
 
-        if ($data['module'] !== 'directadmin') {
-            return [false, 'ماژول انتخاب‌شده پشتیبانی نمی‌شود'];
+        if (empty($data['password']) && empty($data['login_key'])) {
+            return 'رمز عبور یا login key را وارد کنید';
         }
 
         if ($data['port'] <= 0 || $data['port'] > 65535) {
-            return [false, 'پورت نامعتبر است'];
+            return 'پورت نامعتبر است';
+        }
+
+        return null;
+    }
+
+    private function testDirectAdminConnection(array $data): array
+    {
+        $client = new DirectAdminClient($data);
+        $result = $client->testConnection();
+        return [
+            'success' => $result['success'] ?? false,
+            'message' => $result['message'] ?? 'خطا در اتصال',
+        ];
+    }
+
+    private function store($pdo): array
+    {
+        $data = $this->normalizeServerInput();
+        $validationError = $this->validateServerInput($data);
+        if ($validationError !== null) {
+            return [false, $validationError];
+        }
+
+        $connection = $this->testDirectAdminConnection($data);
+        if (!$connection['success']) {
+            return [false, 'اتصال برقرار نشد: ' . $connection['message']];
         }
 
         $now = date('Y-m-d H:i:s');
         try {
-            if ($id > 0) {
-                $stmt = $pdo->prepare("UPDATE servers SET name=?, hostname=?, ip=?, allocated_ips=?, monthly_cost=?, datacenter=?, account_limit=?, status_url=?, disabled=?, ns1=?, ns1_ip=?, ns2=?, ns2_ip=?, ns3=?, ns3_ip=?, ns4=?, ns4_ip=?, ns5=?, ns5_ip=?, module=?, username=?, password=?, ssl=?, port=?, updated_at=? WHERE id=?");
+            if ($data['id'] > 0) {
+                $stmt = $pdo->prepare('UPDATE servers SET hostname = :hostname, ip = :ip, username = :username, password = :password, login_key = :login_key, ssl = :ssl, port = :port, last_check_status = :last_check_status, last_check_message = :last_check_message, last_checked_at = :last_checked_at, updated_at = :updated_at WHERE id = :id');
                 $stmt->execute([
-                    $data['name'],
-                    $data['hostname'],
-                    $data['ip'],
-                    $data['allocated_ips'],
-                    $data['monthly_cost'],
-                    $data['datacenter'],
-                    $data['account_limit'],
-                    $data['status_url'],
-                    $data['disabled'],
-                    $data['ns1'],
-                    $data['ns1_ip'],
-                    $data['ns2'],
-                    $data['ns2_ip'],
-                    $data['ns3'],
-                    $data['ns3_ip'],
-                    $data['ns4'],
-                    $data['ns4_ip'],
-                    $data['ns5'],
-                    $data['ns5_ip'],
-                    $data['module'],
-                    $data['username'],
-                    $data['password'],
-                    $data['ssl'],
-                    $data['port'],
-                    $now,
-                    $id
+                    ':hostname' => $data['hostname'],
+                    ':ip' => $data['ip'],
+                    ':username' => $data['username'],
+                    ':password' => $data['password'],
+                    ':login_key' => $data['login_key'],
+                    ':ssl' => $data['ssl'],
+                    ':port' => $data['port'],
+                    ':last_check_status' => 1,
+                    ':last_check_message' => $connection['message'],
+                    ':last_checked_at' => $now,
+                    ':updated_at' => $now,
+                    ':id' => $data['id'],
                 ]);
+                $id = $data['id'];
             } else {
-                $stmt = $pdo->prepare("INSERT INTO servers (name, hostname, ip, allocated_ips, monthly_cost, datacenter, account_limit, status_url, disabled, ns1, ns1_ip, ns2, ns2_ip, ns3, ns3_ip, ns4, ns4_ip, ns5, ns5_ip, module, username, password, ssl, port, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                $stmt = $pdo->prepare('INSERT INTO servers (hostname, ip, username, password, login_key, ssl, port, last_check_status, last_check_message, last_checked_at, created_at, updated_at) VALUES (:hostname, :ip, :username, :password, :login_key, :ssl, :port, :last_check_status, :last_check_message, :last_checked_at, :created_at, :updated_at)');
                 $stmt->execute([
-                    $data['name'],
-                    $data['hostname'],
-                    $data['ip'],
-                    $data['allocated_ips'],
-                    $data['monthly_cost'],
-                    $data['datacenter'],
-                    $data['account_limit'],
-                    $data['status_url'],
-                    $data['disabled'],
-                    $data['ns1'],
-                    $data['ns1_ip'],
-                    $data['ns2'],
-                    $data['ns2_ip'],
-                    $data['ns3'],
-                    $data['ns3_ip'],
-                    $data['ns4'],
-                    $data['ns4_ip'],
-                    $data['ns5'],
-                    $data['ns5_ip'],
-                    $data['module'],
-                    $data['username'],
-                    $data['password'],
-                    $data['ssl'],
-                    $data['port'],
-                    $now,
-                    $now
+                    ':hostname' => $data['hostname'],
+                    ':ip' => $data['ip'],
+                    ':username' => $data['username'],
+                    ':password' => $data['password'],
+                    ':login_key' => $data['login_key'],
+                    ':ssl' => $data['ssl'],
+                    ':port' => $data['port'],
+                    ':last_check_status' => 1,
+                    ':last_check_message' => $connection['message'],
+                    ':last_checked_at' => $now,
+                    ':created_at' => $now,
+                    ':updated_at' => $now,
                 ]);
                 $id = (int)$pdo->lastInsertId();
             }
@@ -281,16 +269,30 @@ class ServersController
             return [false, 'ذخیره سرور ناموفق بود: ' . $e->getMessage()];
         }
 
-        $stmt = $pdo->prepare("SELECT * FROM servers WHERE id=?");
-        $stmt->execute([$id]);
-        $serverRow = $stmt->fetch();
-        $healthMsg = 'ثبت شد';
-        if ($serverRow) {
-            $result = ServerHealthService::checkAndPersist($serverRow);
-            $healthMsg = $result['status'] ? 'ثبت شد و اتصال برقرار است' : 'ثبت شد اما اتصال برقرار نشد: ' . $result['message'];
+        return [true, 'ثبت شد و اتصال برقرار است'];
+    }
+
+    public function test(): void
+    {
+        $this->ensureAuth();
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            http_response_code(405);
+            return;
         }
 
-        return [true, $healthMsg];
+        $data = $this->normalizeServerInput();
+        $validationError = $this->validateServerInput($data);
+        if ($validationError !== null) {
+            http_response_code(422);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $validationError]);
+            return;
+        }
+
+        $result = $this->testDirectAdminConnection($data);
+        header('Content-Type: application/json');
+        http_response_code($result['success'] ? 200 : 422);
+        echo json_encode($result);
     }
 
     public function delete(): void

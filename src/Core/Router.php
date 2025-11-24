@@ -198,6 +198,9 @@ class Router
             case '/servers/delete':
                 (new \App\Controller\ServersController())->delete();
                 break;
+            case '/servers/test':
+                (new \App\Controller\ServersController())->test();
+                break;
             case '/servers/check':
                 (new \App\Controller\ServersController())->check();
                 break;

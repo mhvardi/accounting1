@@ -29,7 +29,7 @@ class ServicesController
             $customers = $pdo->query("SELECT id, name FROM customers ORDER BY id DESC")->fetchAll();
             $products  = $pdo->query("SELECT id, name, type, billing_cycle FROM products ORDER BY type, name")->fetchAll();
             $categories = $pdo->query("SELECT id, name, slug FROM product_categories ORDER BY is_primary DESC, id DESC")->fetchAll();
-            $servers   = $pdo->query("SELECT id, name, hostname FROM servers ORDER BY id DESC")->fetchAll();
+            $servers   = $pdo->query("SELECT id, hostname FROM servers ORDER BY id DESC")->fetchAll();
             $serversMap = [];
             foreach ($servers as $srv) {
                 $serversMap[$srv['id']] = $srv;
