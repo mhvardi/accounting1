@@ -172,7 +172,8 @@ use App\Core\Str;
                         <td><?php echo number_format((int)($c['sale_total'] ?? $c['total_amount'] ?? 0)); ?></td>
                         <td><?php echo number_format((int)($c['cost_total'] ?? $c['total_cost_amount'] ?? 0)); ?></td>
                         <td><?php echo htmlspecialchars($c['category_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
-                        <td><?php echo htmlspecialchars($c['employee_name'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <?php $employeeName = $c['employee_name'] ?? 'مدیریت'; ?>
+                        <td><?php echo htmlspecialchars($employeeName, ENT_QUOTES, 'UTF-8'); ?></td>
                         <td>
                             <?php
                             $statusLabel = [

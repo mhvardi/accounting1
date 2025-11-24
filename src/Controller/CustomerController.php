@@ -119,7 +119,7 @@ class CustomerController
                 return;
             }
 
-            $contractsStmt = $pdo->prepare("SELECT c.*, e.full_name AS employee_name, cat.name AS category_name
+            $contractsStmt = $pdo->prepare("SELECT c.*, COALESCE(e.full_name, 'مدیریت') AS employee_name, cat.name AS category_name
                                             FROM contracts c
                                             LEFT JOIN employees e ON e.id = c.sales_employee_id
                                             LEFT JOIN product_categories cat ON cat.id = c.category_id

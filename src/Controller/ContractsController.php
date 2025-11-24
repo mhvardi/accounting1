@@ -32,7 +32,7 @@ class ContractsController
 
             $sql = "SELECT c.*,
                            cust.name AS customer_name,
-                           e.full_name AS employee_name,
+                           COALESCE(e.full_name, 'مدیریت') AS employee_name,
                            cat.name AS category_name,
                            COALESCE(SUM(li.sale_amount), 0) AS sale_total,
                            COALESCE(SUM(li.cost_amount), 0) AS cost_total
