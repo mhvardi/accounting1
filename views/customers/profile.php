@@ -15,6 +15,7 @@
  * @var array $smsLogs
  * @var string $registrarBalance
  * @var string $resellerBalance
+ * @var bool $showRegistrarResellerBalances
  * @var array $walletAccount
  * @var array $walletTransactions
  */
@@ -59,16 +60,18 @@ use App\Core\Str;
         </div>
     </div>
 
-    <div class="card-soft" style="margin-top:10px;">
-        <div class="card-header">
-            <div class="card-title">اعتبارات رجیسترار / ریسلر</div>
+    <?php if (!empty($showRegistrarResellerBalances)): ?>
+        <div class="card-soft" style="margin-top:10px;">
+            <div class="card-header">
+                <div class="card-title">اعتبارات رجیسترار / ریسلر</div>
+            </div>
+            <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;">
+                <div class="chip">اعتبار رجیسترار: <?php echo htmlspecialchars($registrarBalance, ENT_QUOTES, 'UTF-8'); ?></div>
+                <div class="chip">اعتبار ریسلر: <?php echo htmlspecialchars($resellerBalance, ENT_QUOTES, 'UTF-8'); ?></div>
+                <div class="chip">کیف پول: <?php echo number_format((int)($walletAccount['balance'] ?? 0)); ?> ریال</div>
+            </div>
         </div>
-        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;">
-            <div class="chip">اعتبار رجیسترار: <?php echo htmlspecialchars($registrarBalance, ENT_QUOTES, 'UTF-8'); ?></div>
-            <div class="chip">اعتبار ریسلر: <?php echo htmlspecialchars($resellerBalance, ENT_QUOTES, 'UTF-8'); ?></div>
-            <div class="chip">کیف پول: <?php echo number_format((int)($walletAccount['balance'] ?? 0)); ?> ریال</div>
-        </div>
-    </div>
+    <?php endif; ?>
 </div>
 
 <div class="tab-panel" id="tab-contracts" style="display:none;">
