@@ -28,7 +28,7 @@ class HostingController
     private function loadAccount(int $id)
     {
         $pdo = Database::connection();
-        $stmt = $pdo->prepare('SELECT h.*, s.id AS srv_id, s.name AS srv_name, s.hostname AS srv_hostname, s.ip AS srv_ip, s.port AS srv_port, s.username AS srv_username, s.password AS srv_password, s.ssl AS srv_ssl FROM hosting_accounts h LEFT JOIN servers s ON s.id = h.server_id WHERE h.id = ?');
+        $stmt = $pdo->prepare('SELECT h.*, s.id AS srv_id, s.hostname AS srv_name, s.hostname AS srv_hostname, s.ip AS srv_ip, s.port AS srv_port, s.username AS srv_username, s.password AS srv_password, s.login_key AS srv_login_key, s.ssl AS srv_ssl FROM hosting_accounts h LEFT JOIN servers s ON s.id = h.server_id WHERE h.id = ?');
         $stmt->execute([$id]);
         return $stmt->fetch();
     }
@@ -115,6 +115,7 @@ class HostingController
                 'port' => $account['srv_port'] ?? null,
                 'username' => $account['srv_username'] ?? '',
                 'password' => $account['srv_password'] ?? '',
+                'login_key' => $account['srv_login_key'] ?? '',
                 'ssl' => $account['srv_ssl'] ?? 0,
             ];
 

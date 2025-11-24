@@ -421,30 +421,16 @@ use App\Core\Str;
             <div class="micro-copy">شناسه کیف پول: <?php echo (int)($walletAccount['id'] ?? 0); ?></div>
         </div>
         <div class="card-soft">
-            <div class="card-header"><div class="card-title">افزایش اعتبار دستی</div></div>
-            <form id="wallet-topup-form" class="grid" style="grid-template-columns:1fr;gap:8px;">
+            <div class="card-header"><div class="card-title">ثبت تراکنش کیف پول</div></div>
+            <form id="wallet-adjust-form" class="grid" style="grid-template-columns:1fr;gap:8px;">
                 <input type="hidden" name="customer_id" value="<?php echo (int)$customer['id']; ?>" />
+                <select name="direction" required>
+                    <option value="credit">افزایش اعتبار</option>
+                    <option value="debit">کاهش / شارژ قرارداد</option>
+                </select>
                 <input type="number" name="amount" placeholder="مبلغ (ریال)" required />
-                <input type="text" name="description" placeholder="توضیحات" />
-                <button type="submit" class="btn">افزایش اعتبار</button>
-            </form>
-        </div>
-        <div class="card-soft">
-            <div class="card-header"><div class="card-title">کسر از کیف پول</div></div>
-            <form id="wallet-charge-form" class="grid" style="grid-template-columns:1fr;gap:8px;">
-                <input type="hidden" name="customer_id" value="<?php echo (int)$customer['id']; ?>" />
-                <input type="number" name="amount" placeholder="مبلغ (ریال)" required />
-                <input type="text" name="description" placeholder="توضیحات" />
-                <button type="submit" class="btn btn-danger">کسر / شارژ قرارداد</button>
-            </form>
-        </div>
-        <div class="card-soft">
-            <div class="card-header"><div class="card-title">بازگشت وجه</div></div>
-            <form id="wallet-refund-form" class="grid" style="grid-template-columns:1fr;gap:8px;">
-                <input type="hidden" name="customer_id" value="<?php echo (int)$customer['id']; ?>" />
-                <input type="number" name="amount" placeholder="مبلغ (ریال)" required />
-                <input type="text" name="description" placeholder="توضیحات" />
-                <button type="submit" class="btn btn-outline">ثبت بازگشت</button>
+                <input type="text" name="description" placeholder="توضیحات (اختیاری)" />
+                <button type="submit" class="btn">ثبت تراکنش</button>
             </form>
         </div>
     </div>
@@ -472,8 +458,13 @@ use App\Core\Str;
                     <?php foreach ($walletTransactions as $txn): ?>
                         <tr>
                             <td><?php echo (int)$txn['id']; ?></td>
-                            <td><?php echo $txn['direction'] === 'credit' ? 'افزایش' : 'کاهش'; ?></td>
-                            <td><?php echo number_format((int)$txn['amount']); ?></td>
+                            <td>
+                                <?php $isDebit = $txn['direction'] === 'debit'; ?>
+                                <span class="chip" style="display:inline-flex;align-items:center;gap:6px;color:<?php echo $isDebit ? '#b91c1c' : '#15803d'; ?>;">
+                                    <?php echo $isDebit ? '⬇️ کاهش' : '⬆️ افزایش'; ?>
+                                </span>
+                            </td>
+                            <td><?php echo ($isDebit ? '-' : '+') . number_format((int)$txn['amount']); ?></td>
                             <td class="micro-copy" style="white-space:normal;max-width:260px;">&lrm;<?php echo htmlspecialchars($txn['description'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
                             <td><?php echo htmlspecialchars($txn['reference_type'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></td>
                             <td><?php echo htmlspecialchars($txn['created_at'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
@@ -546,7 +537,5 @@ use App\Core\Str;
         });
     }
 
-    wireWalletForm('wallet-topup-form', '/customers/wallet/topup');
-    wireWalletForm('wallet-charge-form', '/customers/wallet/charge');
-    wireWalletForm('wallet-refund-form', '/customers/wallet/refund');
+    wireWalletForm('wallet-adjust-form', '/customers/wallet/adjust');
 </script>

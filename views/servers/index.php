@@ -14,112 +14,40 @@
     </div>
     <form method="post" class="grid server-form" id="serverForm" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
         <input type="hidden" name="id" value="">
-        <div class="accordion">
-            <button type="button" class="accordion-toggle" data-accordion-target="#coreFields">مشخصات اصلی</button>
-            <div id="coreFields" class="accordion-body show">
-                <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
-                    <div class="form-field">
-                        <label class="form-label">نام داخلی</label>
-                        <input type="text" name="name" class="form-input" placeholder="iran-direct" required>
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">نام سرور (hostname)</label>
-                        <input type="text" name="hostname" class="form-input" placeholder="stardns.ir" required>
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">IP اصلی</label>
-                        <input type="text" name="ip" class="form-input" placeholder="80.249.115.114" required>
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">IP های اختصاصی (در هر خط یکی)</label>
-                        <textarea name="allocated_ips" class="form-textarea" rows="2"></textarea>
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">هزینه ماهانه</label>
-                        <input type="text" name="monthly_cost" class="form-input" placeholder="0.00">
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">مرکز داده / NOC</label>
-                        <input type="text" name="datacenter" class="form-input" placeholder="تهران">
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">حداکثر تعداد حساب</label>
-                        <input type="text" name="account_limit" class="form-input" placeholder="110">
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">آدرس وضعیت</label>
-                        <input type="text" name="status_url" class="form-input" placeholder="https://example.com/status/">
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">غیرفعال باشد؟</label>
-                        <label class="chip-toggle"><input type="checkbox" name="disabled"> غیرفعال</label>
-                    </div>
-                </div>
+        <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
+            <div class="form-field">
+                <label class="form-label">نام سرور (hostname)</label>
+                <input type="text" name="hostname" class="form-input" placeholder="stardns.ir" required>
             </div>
-        </div>
-
-        <div class="accordion">
-            <button type="button" class="accordion-toggle" data-accordion-target="#connectionFields">اتصال و احراز هویت</button>
-            <div id="connectionFields" class="accordion-body show">
-                <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
-                    <div class="form-field">
-                        <label class="form-label">ماژول</label>
-                        <input type="text" class="form-input" value="DirectAdmin" disabled>
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">نام کاربری</label>
-                        <input type="text" name="username" class="form-input" placeholder="stardnsi" required>
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">رمز</label>
-                        <input type="password" name="password" class="form-input" placeholder="••••••" required>
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">SSL</label>
-                        <label class="chip-toggle"><input type="checkbox" name="ssl" checked> اتصال امن</label>
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">پورت</label>
-                        <input type="text" name="port" class="form-input" value="2223">
-                    </div>
-                </div>
+            <div class="form-field">
+                <label class="form-label">IP اصلی</label>
+                <input type="text" name="ip" class="form-input" placeholder="80.249.115.114" required>
             </div>
-        </div>
-
-        <div class="accordion">
-            <button type="button" class="accordion-toggle" data-accordion-target="#nsFields">DNS / NameServer</button>
-            <div id="nsFields" class="accordion-body">
-                <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
-                    <div class="form-field">
-                        <label class="form-label">NS1</label>
-                        <input type="text" name="ns1" class="form-input" value="ns1.stardns.ir">
-                        <input type="text" name="ns1_ip" class="form-input" placeholder="IP">
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">NS2</label>
-                        <input type="text" name="ns2" class="form-input" value="ns2.stardns.ir">
-                        <input type="text" name="ns2_ip" class="form-input" placeholder="IP">
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">NS3</label>
-                        <input type="text" name="ns3" class="form-input" placeholder="ns3">
-                        <input type="text" name="ns3_ip" class="form-input" placeholder="IP">
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">NS4</label>
-                        <input type="text" name="ns4" class="form-input" placeholder="ns4">
-                        <input type="text" name="ns4_ip" class="form-input" placeholder="IP">
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">NS5</label>
-                        <input type="text" name="ns5" class="form-input" placeholder="ns5">
-                        <input type="text" name="ns5_ip" class="form-input" placeholder="IP">
-                    </div>
-                </div>
+            <div class="form-field">
+                <label class="form-label">نام کاربری DirectAdmin</label>
+                <input type="text" name="username" class="form-input" placeholder="admin" required>
+            </div>
+            <div class="form-field">
+                <label class="form-label">رمز ورود (در صورت استفاده)</label>
+                <input type="password" name="password" class="form-input" placeholder="••••••">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Login Key (اختیاری)</label>
+                <input type="text" name="login_key" class="form-input" placeholder="da_login_key_...">
+                <div class="micro-copy">در صورت استفاده از login key، وارد کردن رمز الزامی نیست.</div>
+            </div>
+            <div class="form-field">
+                <label class="form-label">پورت</label>
+                <input type="text" name="port" class="form-input" value="2222">
+            </div>
+            <div class="form-field">
+                <label class="form-label">SSL</label>
+                <label class="chip-toggle"><input type="checkbox" name="ssl" checked> اتصال امن (https)</label>
             </div>
         </div>
 
         <div style="grid-column:1 / span 3; display:flex; gap:8px; align-items:center;">
+            <button type="button" class="btn btn-outline" id="testConnection">بررسی اتصال</button>
             <button type="submit" class="btn btn-primary gradient">ثبت سرور</button>
             <span id="serverStatus" class="micro-copy"></span>
         </div>
@@ -132,36 +60,60 @@
 
 <script>
     (function(){
-        // accordion
-        document.querySelectorAll('.accordion-toggle').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const target = document.querySelector(btn.dataset.accordionTarget);
-                if (!target) return;
-                target.classList.toggle('show');
-            });
-        });
-
-        // ajax submit
         const form = document.getElementById('serverForm');
         const statusEl = document.getElementById('serverStatus');
+        const testBtn = document.getElementById('testConnection');
+
+        const runTest = () => {
+            statusEl.textContent = 'در حال بررسی اتصال...';
+            statusEl.classList.add('pulse');
+            return fetch('/servers/test', {
+                method: 'POST',
+                headers: {'X-Requested-With':'XMLHttpRequest'},
+                body: new FormData(form)
+            }).then(async res => {
+                const data = await res.json();
+                statusEl.textContent = data.message || (res.ok ? 'موفق' : 'ناموفق');
+                statusEl.classList.remove('pulse');
+                return res.ok;
+            }).catch(() => {
+                statusEl.textContent = 'خطا در بررسی اتصال';
+                statusEl.classList.remove('pulse');
+                return false;
+            });
+        };
+
+        if (testBtn) {
+            testBtn.addEventListener('click', function(e){
+                e.preventDefault();
+                if (!form) return;
+                runTest();
+            });
+        }
+
         if (form) {
             form.addEventListener('submit', function(e){
                 e.preventDefault();
-                statusEl.textContent = 'در حال ذخیره...';
-                statusEl.classList.add('pulse');
-                fetch('/servers', {
-                    method: 'POST',
-                    headers: {'X-Requested-With':'XMLHttpRequest'},
-                    body: new FormData(form)
-                }).then(res => res.json()).then(res => {
-                    statusEl.textContent = res.message || (res.success ? 'ثبت شد' : 'خطا');
-                    statusEl.classList.remove('pulse');
-                    if (res.success) {
-                        setTimeout(() => window.location.reload(), 400);
+                runTest().then(success => {
+                    if (!success) {
+                        return;
                     }
-                }).catch(() => {
-                    statusEl.textContent = 'خطا در اتصال';
-                    statusEl.classList.remove('pulse');
+                    statusEl.textContent = 'در حال ذخیره...';
+                    statusEl.classList.add('pulse');
+                    fetch('/servers', {
+                        method: 'POST',
+                        headers: {'X-Requested-With':'XMLHttpRequest'},
+                        body: new FormData(form)
+                    }).then(res => res.json()).then(res => {
+                        statusEl.textContent = res.message || (res.success ? 'ثبت شد' : 'خطا');
+                        statusEl.classList.remove('pulse');
+                        if (res.success) {
+                            setTimeout(() => window.location.reload(), 400);
+                        }
+                    }).catch(() => {
+                        statusEl.textContent = 'خطا در ذخیره';
+                        statusEl.classList.remove('pulse');
+                    });
                 });
             });
         }
@@ -213,9 +165,10 @@
             <thead>
             <tr>
                 <th>#</th>
-                <th>نام</th>
                 <th>hostname</th>
                 <th>IP</th>
+                <th>نام کاربری</th>
+                <th>SSL</th>
                 <th>پورت</th>
                 <th>مصرف/ظرفیت</th>
                 <th>آخرین بررسی</th>
@@ -226,15 +179,16 @@
             </thead>
             <tbody>
             <?php if (empty($servers)): ?>
-                <tr><td colspan="10">سروری ثبت نشده است.</td></tr>
+                <tr><td colspan="11">سروری ثبت نشده است.</td></tr>
             <?php else: ?>
                 <?php foreach ($servers as $srv): ?>
                     <?php $healthRow = $health[$srv['id']] ?? []; $usage = $healthRow['usage'] ?? []; ?>
                     <tr>
                         <td><?php echo (int)$srv['id']; ?></td>
-                        <td><?php echo htmlspecialchars($srv['name'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo htmlspecialchars($srv['hostname'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo htmlspecialchars($srv['ip'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($srv['username'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo !empty($srv['ssl']) ? '✅' : '—'; ?></td>
                         <td><?php echo htmlspecialchars($srv['port'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td>
                             <?php if (!empty($usage['success'])): ?>
