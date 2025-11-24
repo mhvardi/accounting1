@@ -1,5 +1,7 @@
 <div class="login-heading">
+    <div class="eyebrow">ورود امن</div>
     <div class="title">ورود به پنل</div>
+    <div class="subtitle">برای دسترسی به داشبورد از شناسه خود استفاده کنید.</div>
 </div>
 <?php if (!empty($error)): ?>
     <div class="alert alert-error"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
@@ -15,5 +17,6 @@
     </div>
     <div class="form-actions">
         <button type="submit" class="btn btn-primary" style="width:100%;">ورود به حساب</button>
+        <div class="login-support">ورود با ایمیل، شماره موبایل یا نام کاربری + رمز عبور</div>
     </div>
 </form>

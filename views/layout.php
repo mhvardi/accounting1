@@ -12,8 +12,9 @@ function nav_active(string $path, string $current): string {
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>حسابداری وردی</title>
-    <link rel="stylesheet" href="/assets/css/app.css?v=10">
+    <link rel="stylesheet" href="/assets/css/app.css?v=11">
 </head>
 <body>
 <?php if ($isAuthPage): ?>
@@ -34,7 +35,7 @@ function nav_active(string $path, string $current): string {
     </div>
 <?php else: ?>
     <div class="app-shell">
-        <aside class="sidebar">
+        <aside class="sidebar" aria-label="منوی اصلی" aria-hidden="false">
             <div class="sidebar-logo">
                 <span>داشبورد حسابداری وردی</span>
                 <span class="badge">Pro</span>
@@ -180,10 +181,16 @@ function nav_active(string $path, string $current): string {
                 <?php endif; ?>
             </div>
         </aside>
+        <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
         <main class="main">
             <div class="topbar">
-                <div></div>
-                <div style="display:flex;align-items:center;gap:8px;">
+                <div class="topbar-left">
+                    <button type="button" class="btn btn-outline sidebar-toggle" id="sidebarToggle" aria-label="باز کردن منو">
+                        ☰
+                    </button>
+                    <div class="topbar-title">داشبورد</div>
+                </div>
+                <div class="topbar-actions">
                     <div id="clockLabel" data-date="<?php echo htmlspecialchars($currentJDate, ENT_QUOTES, 'UTF-8'); ?>" style="font-size:12px;min-width:150px;text-align:left;"></div>
                     <button type="button" class="btn btn-outline" id="themeToggle" title="تغییر تم">
                         <span id="themeIcon">☀️</span>
@@ -297,6 +304,58 @@ function nav_active(string $path, string $current): string {
     } else {
         document.addEventListener('DOMContentLoaded', initPicker);
     }
+})();
+
+// کنترل سایدبار موبایل
+(function(){
+    const sidebar = document.querySelector('.sidebar');
+    const main = document.querySelector('.main');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    const navLinks = Array.from(document.querySelectorAll('.sidebar .nav-link'));
+    const mobileQuery = window.matchMedia('(max-width: 1024px)');
+
+    function applyState(open) {
+        const isMobile = mobileQuery.matches;
+        document.body.classList.toggle('sidebar-open', isMobile && open);
+        if (isMobile) {
+            sidebar?.setAttribute('aria-hidden', open ? 'false' : 'true');
+            if (open) {
+                main?.setAttribute('aria-hidden', 'true');
+            } else {
+                main?.removeAttribute('aria-hidden');
+            }
+        } else {
+            sidebar?.setAttribute('aria-hidden', 'false');
+            main?.removeAttribute('aria-hidden');
+        }
+    }
+
+    function setOpen(open) {
+        applyState(open);
+    }
+
+    toggleBtn?.addEventListener('click', function(){
+        const nowOpen = !document.body.classList.contains('sidebar-open');
+        setOpen(nowOpen);
+    });
+
+    backdrop?.addEventListener('click', function(){
+        setOpen(false);
+    });
+
+    navLinks.forEach(function(link){
+        link.addEventListener('click', function(){
+            if (window.matchMedia('(max-width: 1024px)').matches) {
+                setOpen(false);
+            }
+        });
+    });
+
+    applyState(false);
+    mobileQuery.addEventListener('change', function(){
+        applyState(false);
+    });
 })();
 
 // ناوبری آکاردئونی با ذخیره وضعیت در localStorage
