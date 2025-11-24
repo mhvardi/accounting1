@@ -85,15 +85,12 @@ class JsonController
             $srv = $map['server'];
             $payload['servers'][] = [
                 'id' => (int)$srv['id'],
-                'name' => $srv['name'],
                 'hostname' => $srv['hostname'],
                 'ip' => $srv['ip'],
                 'port' => (int)$srv['port'],
                 'ssl' => (bool)$srv['ssl'],
-                'module' => $srv['module'],
-                'datacenter' => $srv['datacenter'],
-                'allocated_ips' => array_values(array_filter(array_map('trim', explode("\n", $srv['allocated_ips'] ?? '')))),
-                'nameservers' => array_values(array_filter([$srv['ns1'] ?? '', $srv['ns2'] ?? '', $srv['ns3'] ?? '', $srv['ns4'] ?? '', $srv['ns5'] ?? ''])),
+                'username' => $srv['username'] ?? '',
+                'has_login_key' => !empty($srv['login_key']),
                 'customers' => array_values(array_map(static fn($name, $cid) => ['id' => (int)$cid, 'name' => $name], $map['customers'], array_keys($map['customers']))),
                 'services' => $map['services'],
             ];
@@ -129,7 +126,6 @@ class JsonController
             'servers' => array_map(static function ($srv) {
                 return [
                     'id' => (int)$srv['id'],
-                    'name' => $srv['name'],
                     'hostname' => $srv['hostname'],
                     'profile' => '/servers',
                 ];
@@ -182,7 +178,6 @@ class JsonController
                 'servers' => array_map(static function ($srv) {
                     return [
                         'id' => (int)$srv['id'],
-                        'name' => $srv['name'],
                         'hostname' => $srv['hostname'],
                         'port' => (int)$srv['port'],
                     ];
@@ -211,7 +206,7 @@ class JsonController
             $servers = $this->servers($pdo);
             $serverMap = [];
             foreach ($servers as $srv) {
-                $serverMap[$srv['id']] = $srv['name'];
+                $serverMap[$srv['id']] = $srv['hostname'];
             }
         } catch (PDOException $e) {
             http_response_code(500);

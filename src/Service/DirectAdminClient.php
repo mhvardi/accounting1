@@ -71,8 +71,17 @@ class DirectAdminClient
                 $opts[CURLOPT_POSTFIELDS] = http_build_query($params);
             }
 
-            if (!empty($this->server['username']) && !empty($this->server['password'])) {
-                $opts[CURLOPT_USERPWD] = $this->server['username'] . ':' . $this->server['password'];
+            if (!empty($this->server['username'])) {
+                $credential = null;
+                if (!empty($this->server['login_key'])) {
+                    $credential = $this->server['username'] . ':' . $this->server['login_key'];
+                } elseif (!empty($this->server['password'])) {
+                    $credential = $this->server['username'] . ':' . $this->server['password'];
+                }
+
+                if ($credential !== null) {
+                    $opts[CURLOPT_USERPWD] = $credential;
+                }
             }
 
             curl_setopt_array($ch, $opts);
