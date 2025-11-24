@@ -2,6 +2,7 @@
 /** @var array $payments */
 /** @var array $contracts */
 /** @var array $customers */
+/** @var array $invoices */
 use App\Core\Date;
 ?>
 <div class="topbar-title" style="margin-bottom:8px;">
@@ -28,6 +29,18 @@ use App\Core\Date;
                 <div class="hint" data-contract-summary style="margin-top:6px;font-size:12px;color:#6b7280;">
                     بدون قرارداد - مبلغ را دستی وارد کنید.
                 </div>
+            </div>
+            <div class="form-field">
+                <label class="form-label">فاکتور (اختیاری)</label>
+                <select name="invoice_id" class="form-select">
+                    <option value="">بدون فاکتور</option>
+                    <?php foreach ($invoices as $inv): ?>
+                        <option value="<?php echo (int)$inv['id']; ?>">
+                            <?php echo htmlspecialchars(($inv['indicator_code'] ?? '') . ' - ' . ($inv['title'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <div class="hint" style="margin-top:6px;font-size:12px;color:#6b7280;">در صورت انتخاب فاکتور، مشتری و قرارداد متناظر پر می‌شود.</div>
             </div>
             <div class="form-field">
                 <label class="form-label">مشتری</label>
@@ -78,6 +91,7 @@ use App\Core\Date;
             <tr>
                 <th>#</th>
                 <th>قرارداد</th>
+                <th>فاکتور</th>
                 <th>مشتری</th>
                 <th>مبلغ قرارداد</th>
                 <th>مبلغ (تومان)</th>
@@ -96,6 +110,7 @@ use App\Core\Date;
                     <tr>
                         <td><?php echo (int)$p['id']; ?></td>
                         <td><?php echo htmlspecialchars($p['contract_title'] ?? 'بدون قرارداد', ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo $p['invoice_code'] ? htmlspecialchars($p['invoice_code'], ENT_QUOTES, 'UTF-8') : '—'; ?></td>
                         <td><?php echo htmlspecialchars($p['customer_name'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo $p['contract_amount'] ? number_format((int)$p['contract_amount']) : '—'; ?></td>
                         <td><?php echo number_format((int)$p['amount']); ?></td>
@@ -134,6 +149,17 @@ use App\Core\Date;
                                                     بدون قرارداد
                                                 <?php endif; ?>
                                             </div>
+                                        </div>
+                                        <div class="form-field">
+                                            <label class="form-label">فاکتور</label>
+                                            <select name="invoice_id" class="form-select">
+                                                <option value="">بدون فاکتور</option>
+                                                <?php foreach ($invoices as $inv): ?>
+                                                    <option value="<?php echo (int)$inv['id']; ?>" <?php echo ($p['invoice_id']==$inv['id'])?'selected':''; ?>>
+                                                        <?php echo htmlspecialchars(($inv['indicator_code'] ?? '') . ' - ' . ($inv['title'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
                                         </div>
                                         <div class="form-field">
                                             <label class="form-label">مشتری</label>
