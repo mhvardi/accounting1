@@ -954,3 +954,31 @@ CREATE TABLE IF NOT EXISTS `user_roles` (
   PRIMARY KEY (`user_id`,`role_id`),
   KEY `role_id` (`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- Table structure for wallet accounts
+CREATE TABLE IF NOT EXISTS `wallet_accounts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `customer_id` int(11) NOT NULL,
+  `balance` int(11) NOT NULL DEFAULT 0,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `customer_unique_wallet` (`customer_id`),
+  KEY `customer_wallet_idx` (`customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- Table structure for wallet transactions
+CREATE TABLE IF NOT EXISTS `wallet_transactions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `wallet_account_id` int(11) NOT NULL,
+  `direction` enum('credit','debit') NOT NULL,
+  `amount` int(11) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `reference_type` varchar(50) DEFAULT NULL,
+  `reference_id` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `wallet_txn_account_idx` (`wallet_account_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

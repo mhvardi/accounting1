@@ -201,6 +201,8 @@ class CustomerController
             $smsLogsStmt->execute([$id]);
             $smsLogs = $smsLogsStmt->fetchAll();
 
+            [$walletAccount, $walletTransactions] = $this->loadWalletData($pdo, $id, $paidTotal, $contractTotal);
+
         } catch (PDOException $e) {
             View::renderError('خطا در بارگذاری پروفایل مشتری: ' . $e->getMessage(), $e->getTraceAsString(), Auth::user());
             return;
@@ -224,6 +226,151 @@ class CustomerController
             'smsLogs'         => $smsLogs ?? [],
             'registrarBalance'=> $registrarBalance ?: '—',
             'resellerBalance' => $resellerBalance ?: '—',
+            'walletAccount'   => $walletAccount,
+            'walletTransactions' => $walletTransactions,
         ]);
+    }
+
+    public function walletTopUp(): void
+    {
+        $this->handleWalletAdjustment('credit', 'manual_topup');
+    }
+
+    public function walletCharge(): void
+    {
+        $this->handleWalletAdjustment('debit', 'charge');
+    }
+
+    public function walletRefund(): void
+    {
+        $this->handleWalletAdjustment('credit', 'refund');
+    }
+
+    protected function handleWalletAdjustment(string $direction, string $referenceType): void
+    {
+        $this->ensureAuth();
+        $customerId = (int)($_POST['customer_id'] ?? 0);
+        $amount     = (int)Str::normalizeDigits($_POST['amount'] ?? '0');
+        $note       = trim($_POST['description'] ?? '');
+
+        if ($customerId <= 0 || $amount <= 0) {
+            $this->jsonResponse(false, 'مبلغ یا شناسه مشتری نامعتبر است.');
+            return;
+        }
+
+        try {
+            $pdo = Database::connection();
+            $pdo->beginTransaction();
+            $wallet = $this->getOrCreateWalletAccount($pdo, $customerId);
+            $this->recordWalletTransaction($pdo, $wallet['id'], $direction, $amount, $note, $referenceType, null);
+            $balance = $this->refreshWalletBalance($pdo, $wallet['id']);
+            $pdo->commit();
+        } catch (PDOException $e) {
+            if (isset($pdo) && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $this->jsonResponse(false, 'خطا در به‌روزرسانی کیف پول: ' . $e->getMessage());
+            return;
+        }
+
+        $this->jsonResponse(true, 'کیف پول با موفقیت بروزرسانی شد.', ['balance' => $balance]);
+    }
+
+    protected function loadWalletData($pdo, int $customerId, int $paidTotal, int $contractTotal): array
+    {
+        $wallet = $this->getOrCreateWalletAccount($pdo, $customerId);
+        $overpayment = max(0, $paidTotal - $contractTotal);
+
+        if ($overpayment > 0) {
+            $existing = $this->getOverpaymentCredits($pdo, $wallet['id']);
+            $pendingCredit = $overpayment - $existing;
+            if ($pendingCredit > 0) {
+                $this->recordWalletTransaction(
+                    $pdo,
+                    $wallet['id'],
+                    'credit',
+                    $pendingCredit,
+                    'اعتبار مازاد پرداخت قرارداد',
+                    'overpayment',
+                    null
+                );
+            }
+        }
+
+        $wallet['balance'] = $this->refreshWalletBalance($pdo, $wallet['id']);
+
+        $txnStmt = $pdo->prepare("SELECT * FROM wallet_transactions WHERE wallet_account_id = ? ORDER BY id DESC LIMIT 80");
+        $txnStmt->execute([$wallet['id']]);
+        $transactions = $txnStmt->fetchAll();
+
+        return [$wallet, $transactions];
+    }
+
+    protected function getOrCreateWalletAccount($pdo, int $customerId): array
+    {
+        $stmt = $pdo->prepare("SELECT * FROM wallet_accounts WHERE customer_id = ? LIMIT 1");
+        $stmt->execute([$customerId]);
+        $wallet = $stmt->fetch();
+        if ($wallet) {
+            return $wallet;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $insert = $pdo->prepare("INSERT INTO wallet_accounts (customer_id, balance, created_at, updated_at) VALUES (?,?,?,?)");
+        $insert->execute([$customerId, 0, $now, $now]);
+
+        return [
+            'id' => (int)$pdo->lastInsertId(),
+            'customer_id' => $customerId,
+            'balance' => 0,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ];
+    }
+
+    protected function refreshWalletBalance($pdo, int $walletId): int
+    {
+        $stmt = $pdo->prepare(
+            "SELECT COALESCE(SUM(CASE WHEN direction='credit' THEN amount ELSE -amount END),0) AS balance"
+            . " FROM wallet_transactions WHERE wallet_account_id = ?"
+        );
+        $stmt->execute([$walletId]);
+        $balance = (int)$stmt->fetchColumn();
+
+        $update = $pdo->prepare("UPDATE wallet_accounts SET balance = ?, updated_at = ? WHERE id = ?");
+        $update->execute([$balance, date('Y-m-d H:i:s'), $walletId]);
+
+        return $balance;
+    }
+
+    protected function getOverpaymentCredits($pdo, int $walletId): int
+    {
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount),0) FROM wallet_transactions WHERE wallet_account_id = ? AND reference_type = 'overpayment' AND direction = 'credit'");
+        $stmt->execute([$walletId]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    protected function recordWalletTransaction($pdo, int $walletId, string $direction, int $amount, string $description = '', ?string $referenceType = null, $referenceId = null): void
+    {
+        $stmt = $pdo->prepare(
+            "INSERT INTO wallet_transactions (wallet_account_id, direction, amount, description, reference_type, reference_id, created_at)"
+            . " VALUES (?,?,?,?,?,?,?)"
+        );
+        $stmt->execute([
+            $walletId,
+            $direction,
+            $amount,
+            $description,
+            $referenceType,
+            $referenceId,
+            date('Y-m-d H:i:s'),
+        ]);
+    }
+
+    protected function jsonResponse(bool $success, string $message, array $data = []): void
+    {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $success, 'message' => $message] + $data);
+        exit;
     }
 }

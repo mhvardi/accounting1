@@ -76,6 +76,15 @@ class Router
             case '/customers/profile':
                 (new \App\Controller\CustomerController())->profile();
                 break;
+            case '/customers/wallet/topup':
+                (new \App\Controller\CustomerController())->walletTopUp();
+                break;
+            case '/customers/wallet/charge':
+                (new \App\Controller\CustomerController())->walletCharge();
+                break;
+            case '/customers/wallet/refund':
+                (new \App\Controller\CustomerController())->walletRefund();
+                break;
 
             case '/leads':
                 (new \App\Controller\LeadController())->index();
