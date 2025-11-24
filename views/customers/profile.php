@@ -27,12 +27,191 @@ use App\Core\Str;
     <span>پروفایل مشتری: <?php echo htmlspecialchars(Str::beautifyLabel($customer['name']), ENT_QUOTES, 'UTF-8'); ?></span>
 </div>
 
+<div class="tab-panel" id="tab-invoices" style="display:none;">
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;">
+        <div class="card-soft">
+            <div class="card-header">
+                <div class="card-title">فاکتور سریع</div>
+                <div class="hint">کد فاکتور بر اساس سال شمسی و به صورت خودکار ساخته می‌شود.</div>
+            </div>
+            <form method="post" action="/invoices/create">
+                <input type="hidden" name="customer_id" value="<?php echo (int)$customer['id']; ?>">
+                <div class="form-field">
+                    <label class="form-label">عنوان</label>
+                    <input type="text" name="title" class="form-input" placeholder="فاکتور قرارداد یا خدمات" required>
+                </div>
+                <div class="form-field">
+                    <label class="form-label">قرارداد مرتبط</label>
+                    <select name="contract_id" class="form-select">
+                        <option value="">بدون قرارداد</option>
+                        <?php foreach ($contracts as $c): ?>
+                            <option value="<?php echo (int)$c['id']; ?>"><?php echo htmlspecialchars($c['title'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label class="form-label">مبلغ (ریال)</label>
+                    <input type="text" name="amount" class="form-input money-input" placeholder="مثلاً 15000000">
+                </div>
+                <div class="form-field">
+                    <label class="form-label">تخفیف (ریال)</label>
+                    <input type="text" name="discount_amount" class="form-input money-input" value="0">
+                </div>
+                <div class="form-field">
+                    <label class="form-label">پرداخت‌شده (ریال)</label>
+                    <input type="text" name="paid_amount" class="form-input money-input" value="0">
+                </div>
+                <div class="form-field">
+                    <label class="form-label">تاریخ سررسید</label>
+                    <input type="text" name="due_date" class="form-input jalali-picker" placeholder="1404/01/15">
+                </div>
+                <div class="form-field">
+                    <label class="form-label">وضعیت</label>
+                    <select name="status" class="form-select">
+                        <option value="unpaid">پرداخت نشده</option>
+                        <option value="paid">پرداخت شده</option>
+                        <option value="cancelled">لغو</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label class="form-label">آیتم‌ها (عنوان | مبلغ)</label>
+                    <textarea name="items" class="form-input" rows="3" placeholder="طراحی سایت | 12000000"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">ثبت فاکتور</button>
+            </form>
+        </div>
+
+        <div class="card-soft">
+            <div class="card-header">
+                <div class="card-title">پیش‌فاکتور</div>
+                <div class="hint">پس از تأیید مشتری می‌توانید آن را به فاکتور تبدیل و پیامک ارسال کنید.</div>
+            </div>
+            <form method="post" action="/proformas/create">
+                <input type="hidden" name="customer_id" value="<?php echo (int)$customer['id']; ?>">
+                <div class="form-field">
+                    <label class="form-label">عنوان</label>
+                    <input type="text" name="title" class="form-input" placeholder="پیش‌فاکتور سرویس جدید" required>
+                </div>
+                <div class="form-field">
+                    <label class="form-label">قرارداد مرتبط</label>
+                    <select name="contract_id" class="form-select">
+                        <option value="">بدون قرارداد</option>
+                        <?php foreach ($contracts as $c): ?>
+                            <option value="<?php echo (int)$c['id']; ?>"><?php echo htmlspecialchars($c['title'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label class="form-label">مبلغ (ریال)</label>
+                    <input type="text" name="amount" class="form-input money-input" value="0">
+                </div>
+                <div class="form-field">
+                    <label class="form-label">تخفیف (ریال)</label>
+                    <input type="text" name="discount_amount" class="form-input money-input" value="0">
+                </div>
+                <div class="form-field">
+                    <label class="form-label">آیتم‌ها</label>
+                    <textarea name="items" class="form-input" rows="3" placeholder="هاست ابری | 8000000"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">ثبت پیش‌فاکتور</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card-soft" style="margin-top:10px;">
+        <div class="card-header">
+            <div class="card-title">فاکتورهای مشتری</div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>کد</th>
+                    <th>عنوان</th>
+                    <th>قرارداد</th>
+                    <th>قابل پرداخت</th>
+                    <th>پرداخت‌شده</th>
+                    <th>وضعیت</th>
+                    <th>چاپ/دانلود</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if (empty($invoices)): ?>
+                    <tr><td colspan="7">فاکتوری برای این مشتری ثبت نشده است.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($invoices as $inv): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($inv['indicator_code'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo htmlspecialchars($inv['title'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo htmlspecialchars($inv['contract_title'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo number_format((int)$inv['payable_amount']); ?></td>
+                            <td><?php echo number_format((int)$inv['paid_amount']); ?></td>
+                            <td><?php echo htmlspecialchars($inv['status'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                                <a class="btn btn-outline" href="/invoices/show?id=<?php echo (int)$inv['id']; ?>" target="_blank">نمایش</a>
+                                <a class="btn btn-outline" href="/invoices/print?id=<?php echo (int)$inv['id']; ?>" target="_blank">چاپ</a>
+                                <a class="btn btn-outline" href="/invoices/print?id=<?php echo (int)$inv['id']; ?>&download=1">دانلود</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-soft" style="margin-top:10px;">
+        <div class="card-header">
+            <div class="card-title">پیش‌فاکتورهای مشتری</div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>کد</th>
+                    <th>عنوان</th>
+                    <th>قرارداد</th>
+                    <th>قابل پرداخت</th>
+                    <th>وضعیت</th>
+                    <th>تبدیل</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if (empty($proformas)): ?>
+                    <tr><td colspan="6">پیش‌فاکتوری ثبت نشده است.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($proformas as $pf): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($pf['indicator_code'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo htmlspecialchars($pf['title'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo htmlspecialchars($pf['contract_title'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo number_format((int)$pf['payable_amount']); ?></td>
+                            <td><?php echo htmlspecialchars($pf['status'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td>
+                                <form method="post" action="/proformas/convert" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+                                    <input type="hidden" name="id" value="<?php echo (int)$pf['id']; ?>">
+                                    <label style="display:flex;gap:4px;align-items:center;font-size:12px;">
+                                        <input type="checkbox" name="send_sms" value="1"> پیامک به مشتری
+                                    </label>
+                                    <button type="submit" class="btn btn-primary">تبدیل</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <div id="action-alert" class="alert" style="display:none;"></div>
 
 <div style="margin-bottom:12px;">
     <div class="tab-controls" style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="btn btn-outline tab-btn active" data-tab="overview">نمای کلی</button>
         <button class="btn btn-outline tab-btn" data-tab="contracts">قراردادها / پرداخت‌ها</button>
+        <button class="btn btn-outline tab-btn" data-tab="invoices">فاکتور / پیش‌فاکتور</button>
         <button class="btn btn-outline tab-btn" data-tab="services">دامنه / هاست</button>
         <button class="btn btn-outline tab-btn" data-tab="notifications">اعلان و لاگ‌ها</button>
         <button class="btn btn-outline tab-btn" data-tab="sms">لاگ پیامک</button>

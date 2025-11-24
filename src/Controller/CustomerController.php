@@ -150,6 +150,24 @@ class CustomerController
             $paymentsStmt->execute([$id, $id]);
             $payments = $paymentsStmt->fetchAll();
 
+            $invoiceStmt = $pdo->prepare("SELECT i.*, ct.title AS contract_title
+                                          FROM invoices i
+                                          LEFT JOIN contracts ct ON ct.id = i.contract_id
+                                          WHERE i.customer_id = ?
+                                          ORDER BY i.id DESC
+                                          LIMIT 20");
+            $invoiceStmt->execute([$id]);
+            $invoices = $invoiceStmt->fetchAll();
+
+            $proformaStmt = $pdo->prepare("SELECT pf.*, ct.title AS contract_title
+                                           FROM proformas pf
+                                           LEFT JOIN contracts ct ON ct.id = pf.contract_id
+                                           WHERE pf.customer_id = ?
+                                           ORDER BY pf.id DESC
+                                           LIMIT 20");
+            $proformaStmt->execute([$id]);
+            $proformas = $proformaStmt->fetchAll();
+
             $servers = $pdo->query("SELECT id, name, hostname, provider, last_check_message FROM servers")->fetchAll();
             $serversMap = [];
             foreach ($servers as $srv) {
@@ -216,6 +234,8 @@ class CustomerController
             'paidTotal'     => $paidTotal,
             'dueTotal'      => $dueTotal,
             'payments'      => $payments,
+            'invoices'      => $invoices ?? [],
+            'proformas'     => $proformas ?? [],
             'serversMap'    => $serversMap ?? [],
             'domains'       => $domains ?? [],
             'hostingAccounts' => $hostingAccounts ?? [],

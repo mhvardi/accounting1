@@ -288,6 +288,7 @@ CREATE TABLE `monthly_targets` (
 CREATE TABLE `payments` (
   `id` int(11) NOT NULL,
   `contract_id` int(11) DEFAULT NULL,
+  `invoice_id` int(11) DEFAULT NULL,
   `customer_id` int(11) DEFAULT NULL,
   `contract_amount` int(11) DEFAULT NULL,
   `whmcs_invoice_id` int(11) DEFAULT NULL,
@@ -307,10 +308,65 @@ CREATE TABLE `payments` (
 -- Dumping data for table `payments`
 --
 
-INSERT INTO `payments` (`id`, `contract_id`, `customer_id`, `contract_amount`, `whmcs_invoice_id`, `external_source`, `external_ref`, `amount`, `pay_date`, `paid_at`, `method`, `status`, `note`, `created_at`, `updated_at`) VALUES
-(1, 2, 4, 40000000, NULL, 'none', NULL, 20000000, '1404/08/28', '0000-00-00 00:00:00', 'درگاه', 'paid', '', '2025-11-19 15:04:56', '2025-11-19 15:04:56'),
-(2, 4, 5, 60000000, NULL, 'none', NULL, 20000000, '1404/08/20', '0000-00-00 00:00:00', 'درگاه', 'paid', '', '2025-11-19 15:07:28', '2025-11-19 15:07:28'),
-(3, 10, 23, 5000000, NULL, 'manual', NULL, 5000000, '2025-11-22', '2025-11-22 00:00:00', 'کارت به کارت', 'paid', '', '2025-11-22 10:05:11', '2025-11-22 10:05:11');
+INSERT INTO `payments` (`id`, `contract_id`, `invoice_id`, `customer_id`, `contract_amount`, `whmcs_invoice_id`, `external_source`, `external_ref`, `amount`, `pay_date`, `paid_at`, `method`, `status`, `note`, `created_at`, `updated_at`) VALUES
+(1, 2, NULL, 4, 40000000, NULL, 'none', NULL, 20000000, '1404/08/28', '0000-00-00 00:00:00', 'درگاه', 'paid', '', '2025-11-19 15:04:56', '2025-11-19 15:04:56'),
+(2, 4, NULL, 5, 60000000, NULL, 'none', NULL, 20000000, '1404/08/20', '0000-00-00 00:00:00', 'درگاه', 'paid', '', '2025-11-19 15:07:28', '2025-11-19 15:07:28'),
+(3, 10, NULL, 23, 5000000, NULL, 'manual', NULL, 5000000, '2025-11-22', '2025-11-22 00:00:00', 'کارت به کارت', 'paid', '', '2025-11-22 10:05:11', '2025-11-22 10:05:11');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `invoices`
+--
+
+CREATE TABLE IF NOT EXISTS `invoices` (
+  `id` int(11) NOT NULL,
+  `indicator_year` int(11) NOT NULL,
+  `indicator_seq` int(11) NOT NULL,
+  `indicator_code` varchar(50) NOT NULL,
+  `customer_id` int(11) DEFAULT NULL,
+  `contract_id` int(11) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `items_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`items_json`)),
+  `gross_amount` int(11) NOT NULL DEFAULT 0,
+  `discount_amount` int(11) NOT NULL DEFAULT 0,
+  `payable_amount` int(11) NOT NULL DEFAULT 0,
+  `paid_amount` int(11) NOT NULL DEFAULT 0,
+  `status` enum('unpaid','paid','cancelled') DEFAULT 'unpaid',
+  `issue_date` date DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `note` text DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `proformas`
+--
+
+CREATE TABLE IF NOT EXISTS `proformas` (
+  `id` int(11) NOT NULL,
+  `indicator_year` int(11) NOT NULL,
+  `indicator_seq` int(11) NOT NULL,
+  `indicator_code` varchar(50) NOT NULL,
+  `customer_id` int(11) DEFAULT NULL,
+  `contract_id` int(11) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `items_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`items_json`)),
+  `gross_amount` int(11) NOT NULL DEFAULT 0,
+  `discount_amount` int(11) NOT NULL DEFAULT 0,
+  `payable_amount` int(11) NOT NULL DEFAULT 0,
+  `status` enum('unpaid','paid','cancelled') DEFAULT 'unpaid',
+  `issue_date` date DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `note` text DEFAULT NULL,
+  `converted_invoice_id` int(11) DEFAULT NULL,
+  `converted_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -561,7 +617,29 @@ ALTER TABLE `payments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_paid_at` (`paid_at`),
   ADD KEY `idx_contract_id` (`contract_id`),
+  ADD KEY `idx_invoice_id` (`invoice_id`),
   ADD KEY `idx_status` (`status`);
+
+--
+-- Indexes for table `invoices`
+--
+ALTER TABLE `invoices`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `indicator_unique` (`indicator_year`,`indicator_seq`),
+  ADD KEY `idx_invoice_customer` (`customer_id`),
+  ADD KEY `idx_invoice_contract` (`contract_id`),
+  ADD KEY `idx_invoice_status` (`status`);
+
+--
+-- Indexes for table `proformas`
+--
+ALTER TABLE `proformas`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `proforma_indicator_unique` (`indicator_year`,`indicator_seq`),
+  ADD KEY `idx_proforma_customer` (`customer_id`),
+  ADD KEY `idx_proforma_contract` (`contract_id`),
+  ADD KEY `idx_proforma_status` (`status`),
+  ADD KEY `idx_proforma_conversion` (`converted_invoice_id`);
 
 --
 -- Indexes for table `products`
@@ -692,6 +770,18 @@ ALTER TABLE `monthly_targets`
 --
 ALTER TABLE `payments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `invoices`
+--
+ALTER TABLE `invoices`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `proformas`
+--
+ALTER TABLE `proformas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `products`

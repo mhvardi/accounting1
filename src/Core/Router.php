@@ -141,6 +141,41 @@ class Router
                 (new \App\Controller\PaymentsController())->contractInfo();
                 break;
 
+            case '/invoices':
+                (new \App\Controller\InvoiceController())->index();
+                break;
+            case '/invoices/create':
+                (new \App\Controller\InvoiceController())->create();
+                break;
+            case '/invoices/edit':
+                (new \App\Controller\InvoiceController())->edit();
+                break;
+            case '/invoices/delete':
+                (new \App\Controller\InvoiceController())->delete();
+                break;
+            case '/invoices/show':
+                (new \App\Controller\InvoiceController())->show();
+                break;
+            case '/invoices/print':
+                (new \App\Controller\InvoiceController())->print();
+                break;
+
+            case '/proformas':
+                (new \App\Controller\ProformaController())->index();
+                break;
+            case '/proformas/create':
+                (new \App\Controller\ProformaController())->create();
+                break;
+            case '/proformas/edit':
+                (new \App\Controller\ProformaController())->edit();
+                break;
+            case '/proformas/delete':
+                (new \App\Controller\ProformaController())->delete();
+                break;
+            case '/proformas/convert':
+                (new \App\Controller\ProformaController())->convert();
+                break;
+
             case '/expenses':
                 (new \App\Controller\ExpensesController())->index();
                 break;

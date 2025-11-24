@@ -95,6 +95,16 @@ function nav_active(string $path, string $current): string {
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="/invoices" class="nav-link <?php echo nav_active('/invoices', $currentPath); ?>">
+                            <span class="icon">🧾</span><span class="text">فاکتورها</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/proformas" class="nav-link <?php echo nav_active('/proformas', $currentPath); ?>">
+                            <span class="icon">📑</span><span class="text">پیش‌فاکتور</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="/services" class="nav-link <?php echo nav_active('/services', $currentPath); ?>">
                             <span class="icon">🛰️</span><span class="text">سرویس‌ها</span>
                         </a>
