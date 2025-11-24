@@ -231,27 +231,14 @@ class CustomerController
         ]);
     }
 
-    public function walletTopUp(): void
-    {
-        $this->handleWalletAdjustment('credit', 'manual_topup');
-    }
-
-    public function walletCharge(): void
-    {
-        $this->handleWalletAdjustment('debit', 'charge');
-    }
-
-    public function walletRefund(): void
-    {
-        $this->handleWalletAdjustment('credit', 'refund');
-    }
-
-    protected function handleWalletAdjustment(string $direction, string $referenceType): void
+    public function walletAdjust(): void
     {
         $this->ensureAuth();
+
         $customerId = (int)($_POST['customer_id'] ?? 0);
         $amount     = (int)Str::normalizeDigits($_POST['amount'] ?? '0');
         $note       = trim($_POST['description'] ?? '');
+        $direction  = ($_POST['direction'] ?? 'credit') === 'debit' ? 'debit' : 'credit';
 
         if ($customerId <= 0 || $amount <= 0) {
             $this->jsonResponse(false, 'مبلغ یا شناسه مشتری نامعتبر است.');
@@ -262,7 +249,7 @@ class CustomerController
             $pdo = Database::connection();
             $pdo->beginTransaction();
             $wallet = $this->getOrCreateWalletAccount($pdo, $customerId);
-            $this->recordWalletTransaction($pdo, $wallet['id'], $direction, $amount, $note, $referenceType, null);
+            $this->recordWalletTransaction($pdo, $wallet['id'], $direction, $amount, $note, 'manual', null);
             $balance = $this->refreshWalletBalance($pdo, $wallet['id']);
             $pdo->commit();
         } catch (PDOException $e) {
